@@ -71,10 +71,21 @@ export const App: React.FC = () => {
   const [isSpectatorPlaying, setIsSpectatorPlaying] = useState<boolean>(false);
   const [lastAiResponse, setLastAiResponse] = useState<AIResponse | null>(null);
 
-  // Audio / Sound FX (Synthesized Web Audio API for zero external dependency reliability)
+  // Audio / Sound FX (Synthesized Web Audio API with shared singleton context to prevent resource leaks)
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
   const playSoundEffect = (type: 'move' | 'capture' | 'bash' | 'convert' | 'victory' | 'check') => {
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (!audioCtxRef.current) {
+        const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtxClass) return;
+        audioCtxRef.current = new AudioCtxClass();
+      }
+      const audioCtx = audioCtxRef.current;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);
@@ -111,6 +122,16 @@ export const App: React.FC = () => {
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.25);
+      } else if (type === 'victory') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.55);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.55);
       }
     } catch {
       // Audio not supported or blocked
@@ -269,6 +290,7 @@ export const App: React.FC = () => {
       targetState.activePlayer = lastEntry.activePlayer;
       targetState.status = 'in_progress';
       targetState.winner = null;
+      targetState.statusReason = undefined;
       targetState.rng.setState(lastEntry.rngState);
       if (targetState.activePlayer === 'gold' && targetState.turnNumber > 1) {
         targetState.turnNumber -= 1;
@@ -286,6 +308,7 @@ export const App: React.FC = () => {
     setSelectedPiece(null);
     setShowResultModal(false);
     setIsSpectatorPlaying(false);
+    setIsAiThinking(false);
     setLastAiResponse(null);
   };
 
@@ -294,6 +317,8 @@ export const App: React.FC = () => {
     setScreen('splash');
     setShowResultModal(false);
     setIsSpectatorPlaying(false);
+    setIsAiThinking(false);
+    setSelectedPiece(null);
   };
 
   // Graveyard / Captured pieces count

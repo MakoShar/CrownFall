@@ -32,18 +32,19 @@ flowchart TD
 - [x] Real-time attack map with zone control, protectors, threats, pins, and forks (`engine/attackDetection.ts`).
 
 ### Phase 3: Original Unit Abilities [COMPLETED]
-- [x] **Regent**: 8-direction movement, elimination win condition, no chess check/checkmate (`engine/pieces.ts`).
+- [x] **Regent**: 8-direction movement, standard chess check & checkmate rules, mandatory defense (`engine/pieces.ts`, `engine/moveGenerator.ts`).
 - [x] **Champion**: 8-direction raycast attack, immune to Oracle conversion (`engine/conversionHandler.ts`).
-- [x] **Rider**: N/S vs E/W directional axis movement, rotation consuming turn, facing visualizer (`engine/riderOrientation.ts`).
+- [x] **Rider**: N/S (↕) vs E/W (↔) directional axis movement, rotation consuming turn, bi-directional indicators (`engine/riderOrientation.ts`).
 - [x] **Oracle**: Divine Conversion vs Normal Capture choice, sacrifice mechanic, mutual Oracle destruction (`engine/conversionHandler.ts`).
 - [x] **Bastion**: BASH random displacement, crush on trap, Siege Mode unlock, Enhanced 2-Target BASH, Soldier Leap (`engine/bastionAbilities.ts`).
-- [x] **Soldier**: Forward & sideways movement (no backward), Friendly Elimination, baseline promotion to Champion/Rider/Bastion (`engine/promotionHandler.ts`).
+- [x] **Soldier**: Forward & sideways movement (5 directions, no backward), Friendly Elimination, baseline promotion to Champion/Rider/Bastion (`engine/promotionHandler.ts`).
 
-### Phase 4: Mutual Regent Capture Endgame [COMPLETED]
-- [x] Normal Regent capture immediate win when capturer is safe.
-- [x] `mutual_regent_response` state transition when capturer is threatened.
-- [x] Exact single final response turn allowing only counter-captures.
-- [x] Honorable Draw resolution upon successful counter-strike (`engine/endgameHandler.ts`).
+### Phase 4: Chess Check & Checkmate Endgame [COMPLETED]
+- [x] Regent cannot step into check (attacked square is illegal).
+- [x] Pinned units cannot move off their pin line to expose Regent.
+- [x] When in check, player must resolve check (escape, block, or capture attacker).
+- [x] Checkmate detection triggers immediate victory for attacker.
+- [x] Stalemate detection triggers honorable draw resolution (`engine/gameState.ts`).
 
 ### Phase 5: Artificial Intelligence Engine [COMPLETED]
 - [x] **Minimax**: Adversarial minimax search alternating maximizing/minimizing (`algorithms/minimax.ts`).
@@ -64,6 +65,7 @@ flowchart TD
 
 ### Phase 8: UI/UX & Verification [COMPLETED]
 - [x] Dark fantasy kingdom aesthetic with gold & silver accents.
-- [x] Bespoke original vector SVG artwork for all units.
-- [x] 28/28 unit tests passing with Vitest (`npm test`).
+- [x] Multi-screen flow (Splash screen with animated starfield, Mode selection, Difficulty tier selector).
+- [x] High-fidelity 3D fantasy character piece renders with kingdom color tinting and badges.
+- [x] 32/32 unit tests passing with Vitest (`npm test`).
 - [x] Production build passes cleanly with zero TypeScript errors (`npm run build`).

@@ -199,29 +199,29 @@ export const TUTORIAL_SCENARIOS: TutorialScenario[] = [
     },
   },
   {
-    id: 'mutual_regent_capture',
+    id: 'check_and_checkmate',
     stepNumber: 9,
-    title: 'Mutual Regent Capture — The Comeback System',
-    subtitle: 'Never surrender until the Regent falls.',
-    lore: 'If a king strikes down their rival while their own heart is under blade, the dying empire gets one final strike.',
-    instructions: 'Silver has just captured your Regent, but your Champion at (7, 0) can strike back! Counter-capture Silver\'s Regent at (7, 4) for an honorable DRAW.',
-    mechanicNote: 'During Mutual Regent Response, ONLY moves that capture the enemy Regent are legal. A successful counter-strike forces a draw!',
-    hint: 'Take your final response turn: move your Champion from (7, 0) to capture the Silver Regent at (7, 4).',
+    title: 'Check & Checkmate — The Royal Siege',
+    subtitle: 'Trap the opposing Regent with nowhere to run.',
+    lore: 'When a sovereign has no square to flee and no defender to shield their crown, the war is won decisively through checkmate.',
+    instructions: 'Deliver checkmate to the cornered Silver Regent! Move your Gold Champion from (0, 7) to (0, 2) along rank 0.',
+    mechanicNote: 'When a Regent is attacked, it is in CHECK. If the player has no legal moves to escape, it is CHECKMATE — victory is immediate!',
+    hint: 'Select your Champion at (0, 7) and slide left to (0, 2) to deliver inescapable checkmate.',
     createScenarioState: () => {
-      const silverRegent = createPiece('regent', 'silver', { row: 7, col: 4 }); // just captured gold regent on (7,4)
-      const goldChampion = createPiece('champion', 'gold', { row: 7, col: 0 }); // Gold champion in horizontal line
-      const silverSoldier = createPiece('soldier', 'silver', { row: 2, col: 2 });
-      const state = createInitialGameState({ customPieces: [silverRegent, goldChampion, silverSoldier] });
-      state.activePlayer = 'gold';
-      state.status = 'mutual_regent_response';
-      state.statusReason = 'Silver captured Gold Regent, but Gold has one final response!';
-      return state;
+      const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
+      const silverSoldier1 = createPiece('soldier', 'silver', { row: 1, col: 0 });
+      const silverSoldier2 = createPiece('soldier', 'silver', { row: 1, col: 1 });
+      const goldChampion = createPiece('champion', 'gold', { row: 0, col: 7 });
+      const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
+      return createInitialGameState({
+        customPieces: [silverRegent, silverSoldier1, silverSoldier2, goldChampion, goldRegent],
+      });
     },
     validateMove: (move) => {
-      if (move.type === 'move' && move.to?.row === 7 && move.to?.col === 4) {
-        return { isSuccess: true, feedback: 'HONORABLE DRAW! Mutual Regent Capture achieved! Neither kingdom surrendered!' };
+      if (move.type === 'move' && move.to?.row === 0 && move.to?.col === 2) {
+        return { isSuccess: true, feedback: 'CHECKMATE! The Silver Regent is trapped with zero escape moves. Victory is yours!' };
       }
-      return { isSuccess: false, feedback: 'Strike Silver\'s Regent at (7, 4) to force the draw!' };
+      return { isSuccess: false, feedback: 'Slide the Champion to (0, 2) to deliver checkmate!' };
     },
   },
 ];

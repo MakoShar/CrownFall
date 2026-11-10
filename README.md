@@ -23,9 +23,8 @@
 
 ### 1. REGENT — The Commander
 - **Movement**: Moves exactly 1 square in any of the 8 directions.
-- **Capture**: Captures opposing units normally.
-- **Special Rules**: Cannot be converted by an Oracle. Its capture normally results in defeat.
-- **No Check/Checkmate**: Being surrounded or under attack does not force the player to move the Regent. The kingdom falls only when its Regent is captured.
+- **Capture**: Captures opposing units normally. Cannot be converted by an Oracle.
+- **Chess Check & Checkmate**: The Regent is subject to standard chess check rules. A player cannot make any move that leaves or puts their own Regent in check. When in check, the player must resolve the check (move Regent, block the ray, or capture the attacker). If no legal escape moves exist, it is **CHECKMATE** and the game ends in defeat.
 
 ### 2. CHAMPION — The Supreme Warrior
 - **Movement**: Unlimited distance horizontally, vertically, and diagonally across open squares.
@@ -33,11 +32,11 @@
 - **Battlefield Control**: Provides supreme zone control and defense over friendly lines.
 
 ### 3. RIDER — The Directional Warrior
-- **Facing Axis**: Movement depends strictly upon current facing direction:
-  - Facing **North** or **South**: Moves vertically forward or backward.
-  - Facing **East** or **West**: Moves horizontally forward or backward.
-- **Rotation**: Rotating to any of the 4 cardinal directions consumes the player's **entire turn**. A Rider cannot rotate and move on the same turn.
-- **Allegiance Retention**: If converted by an Oracle, retains its previous facing direction.
+- **Movement Axis**: Movement depends strictly upon current orientation axis, shown with bi-directional badges:
+  - **Vertical Axis (`↕`)**: Moves vertically forward or backward across open squares.
+  - **Horizontal Axis (`↔`)**: Moves horizontally left or right across open squares.
+- **Rotation**: Clicking **Rotate ↔** or **Rotate ↕** toggles the Rider between vertical and horizontal axes, consuming the player's **entire turn**.
+- **Allegiance Retention**: If converted by an Oracle, retains its previous axis and abilities.
 
 ### 4. ORACLE — The Divine Messenger
 - **Movement**: Moves diagonally any number of squares.
@@ -65,15 +64,12 @@
 
 ---
 
-## 👑 Mutual Regent Capture — The Comeback System
+## 👑 Check, Checkmate & Game End Conditions
 
-1. Player A captures Player B's Regent.
-2. The engine checks if Player A's own Regent is simultaneously under threat.
-3. If safe: Player A wins immediately.
-4. If threatened: Player B receives **exactly one final response turn**.
-5. During this final response, only legal moves that capture Player A's Regent are allowed.
-6. If Player B successfully counter-captures Player A's Regent, the match ends in an honorable **DRAW**.
-7. If no legal counter-capture exists, Player A wins immediately.
+1. **Check**: When a kingdom's Regent is threatened by an opposing piece, the kingdom is in **CHECK**. The Regent tile pulses with a red alert aura and `CHECK!` badge.
+2. **Mandatory Defense**: Any move that leaves or places your own Regent in check is strictly illegal. Pinned pieces cannot move off their pin line, and the Regent cannot move into attacked squares.
+3. **Checkmate**: When in check and no legal move can escape: **CHECKMATE!** The attacking player wins immediately.
+4. **Stalemate**: When the active player has no legal moves and is **not** in check, the match concludes in an honorable **DRAW**.
 
 ---
 
@@ -116,7 +112,7 @@ Nine dedicated interactive scenarios:
 6. Siege Mode: Enhanced BASH & Soldier Leap
 7. Soldier movement and Friendly Elimination
 8. Soldier baseline promotion
-9. Mutual Regent Capture comeback
+9. Check & Checkmate: The Royal Siege
 
 ---
 
@@ -125,7 +121,7 @@ Nine dedicated interactive scenarios:
 - **Engine**: TypeScript (100% headless, pure deterministic logic, seeded PRNG)
 - **Frontend**: React 19, Tailwind CSS, Lucide Icons, Canvas Confetti
 - **Build Tool**: Vite
-- **Testing**: Vitest automated unit test suite (28 comprehensive test cases)
+- **Testing**: Vitest automated unit test suite (32 comprehensive test cases)
 
 ```
 src/
@@ -133,14 +129,15 @@ src/
   ai/                  # Heuristic evaluation, move ordering, chance nodes, opponent presets
   components/
     AIAnalysis/        # Fullscreen AI decision tree & benchmark explorer
-    Board/             # Responsive stone grid, tactical overlay, move indicators
+    Board/             # Responsive stone grid, tactical overlay, check & move indicators
     ConversionDialog/  # Oracle capture vs conversion modal
     GameControls/      # Rider rotation & Bastion BASH action panel
     MatchResult/       # Endgame victory & draw presentation
     MoveHistory/       # Auto-scrolling battle chronicle
-    Pieces/            # Bespoke dark-fantasy SVG artwork
+    Pieces/            # 3D fantasy character piece renders with kingdom color tinting
     PromotionDialog/   # Soldier baseline ascendance modal
     Rules/             # Full in-game rulebook
+    Screens/           # Multi-screen flow (SplashScreen, ModeSelectScreen, DifficultySelectScreen)
     Tutorial/          # 9-step interactive academy
   config/              # Board geometry, directions, starting layout presets
   engine/              # GameState, move generator, attack map, abilities, endgame
