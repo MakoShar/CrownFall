@@ -15,6 +15,9 @@ import { TutorialModal } from './components/Tutorial/TutorialModal';
 import { RulesModal } from './components/Rules/RulesModal';
 import { MatchResultModal } from './components/MatchResult/MatchResultModal';
 import { PieceIcon } from './components/Pieces/PieceIcon';
+import { SplashScreen } from './components/Screens/SplashScreen';
+import { ModeSelectScreen } from './components/Screens/ModeSelectScreen';
+import { DifficultySelectScreen } from './components/Screens/DifficultySelectScreen';
 import {
   Brain,
   BookOpen,
@@ -32,16 +35,23 @@ import {
   Users,
   Bot,
   Flame,
-  Award
+  Award,
+  ChevronLeft,
+  GraduationCap,
 } from 'lucide-react';
 
 export type GameMode = 'human_vs_human' | 'human_vs_ai' | 'ai_vs_ai';
+type Screen = 'splash' | 'mode_select' | 'difficulty_select' | 'game';
 
 export const App: React.FC = () => {
+  // Screen navigation state
+  const [screen, setScreen] = useState<Screen>('splash');
+
   // Game Configuration State
   const [gameMode, setGameMode] = useState<GameMode>('human_vs_ai');
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('intermediate');
   const [humanPlayerColor, setHumanPlayerColor] = useState<PlayerColor>('gold');
+  const [pendingMode, setPendingMode] = useState<GameMode>('human_vs_ai');
 
   // Game Engine State
   const [gameState, setGameState] = useState<GameState>(() => createInitialGameState());
@@ -124,6 +134,7 @@ export const App: React.FC = () => {
 
   // AI Turn Triggering (Human vs AI or AI vs AI)
   useEffect(() => {
+    if (screen !== 'game') return;
     const isGameOver = gameState.status !== 'in_progress' && gameState.status !== 'mutual_regent_response';
     if (isGameOver) return;
 
@@ -147,7 +158,7 @@ export const App: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [gameState, gameMode, humanPlayerColor, aiDifficulty, isSpectatorPlaying]);
+  }, [gameState, gameMode, humanPlayerColor, aiDifficulty, isSpectatorPlaying, screen]);
 
   // Handle Board piece click
   const handlePieceClick = (piece: Piece) => {
@@ -259,7 +270,7 @@ export const App: React.FC = () => {
     setShowResultModal(false);
   };
 
-  // Restart Match
+  // Restart Match (stays on game screen)
   const handleRestart = () => {
     setGameState(createInitialGameState());
     setSelectedPiece(null);
@@ -268,17 +279,94 @@ export const App: React.FC = () => {
     setLastAiResponse(null);
   };
 
+  // Go back to main menu
+  const handleBackToMenu = () => {
+    setScreen('splash');
+    setShowResultModal(false);
+    setIsSpectatorPlaying(false);
+  };
+
   // Graveyard / Captured pieces count
   const goldPiecesRemaining = gameState.pieces.filter((p) => p.owner === 'gold');
   const silverPiecesRemaining = gameState.pieces.filter((p) => p.owner === 'silver');
+
+  // ─── SCREEN ROUTING ────────────────────────────────────────────────────────
+
+  if (screen === 'splash') {
+    return (
+      <>
+        <SplashScreen
+          onPlay={() => setScreen('mode_select')}
+          onTutorial={() => { setScreen('splash'); setShowTutorial(true); }}
+          onRules={() => { setScreen('splash'); setShowRules(true); }}
+        />
+        {showTutorial && <TutorialModal onClose={() => setShowTutorial(false)} />}
+        {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+      </>
+    );
+  }
+
+  if (screen === 'mode_select') {
+    return (
+      <ModeSelectScreen
+        onSelectMode={(mode) => {
+          setPendingMode(mode);
+          if (mode === 'human_vs_human') {
+            // No difficulty needed
+            setGameMode(mode);
+            setGameState(createInitialGameState());
+            setSelectedPiece(null);
+            setShowResultModal(false);
+            setLastAiResponse(null);
+            setIsSpectatorPlaying(false);
+            setScreen('game');
+          } else {
+            setPendingMode(mode);
+            setScreen('difficulty_select');
+          }
+        }}
+        onBack={() => setScreen('splash')}
+      />
+    );
+  }
+
+  if (screen === 'difficulty_select') {
+    return (
+      <DifficultySelectScreen
+        mode={pendingMode}
+        onSelectDifficulty={(diff) => {
+          setGameMode(pendingMode);
+          setAiDifficulty(diff);
+          setGameState(createInitialGameState());
+          setSelectedPiece(null);
+          setShowResultModal(false);
+          setLastAiResponse(null);
+          setIsSpectatorPlaying(false);
+          setScreen('game');
+        }}
+        onBack={() => setScreen('mode_select')}
+      />
+    );
+  }
+
+  // ─── GAME SCREEN ────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-kingdom-obsidian text-slate-100 flex flex-col font-sans">
       {/* Top Regal Navigation Bar */}
       <header className="px-4 py-3 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 shadow-xl flex items-center justify-between">
+        {/* Left: Logo + back button */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-kingdom-gold via-amber-600 to-amber-800 flex items-center justify-center shadow-regal-gold border border-amber-300">
-            <Crown className="w-6 h-6 text-black" />
+          <button
+            onClick={handleBackToMenu}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors mr-1"
+            title="Back to Main Menu"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Menu</span>
+          </button>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-kingdom-gold via-amber-600 to-amber-800 flex items-center justify-center shadow-regal-gold border border-amber-300 overflow-hidden">
+            <img src="/pieces/regent.png" alt="Crown" className="w-full h-full object-cover object-top" />
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-fantasy font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-kingdom-gold to-yellow-500">
@@ -296,16 +384,16 @@ export const App: React.FC = () => {
             onClick={() => setShowTutorial(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-200 border border-slate-700 transition-colors"
           >
-            <BookOpen className="w-4 h-4 text-kingdom-gold" />
-            <span className="hidden sm:inline">Interactive</span> Academy
+            <GraduationCap className="w-4 h-4 text-kingdom-gold" />
+            <span className="hidden sm:inline">Academy</span>
           </button>
 
           <button
             onClick={() => setShowRules(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors"
           >
-            <HelpCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Codex</span> Rules
+            <BookOpen className="w-4 h-4" />
+            <span className="hidden sm:inline">Codex</span>
           </button>
 
           <button
@@ -354,14 +442,14 @@ export const App: React.FC = () => {
                 <div
                   className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 shadow-lg ${
                     gameState.activePlayer === 'gold'
-                      ? 'bg-amber-950/60 border-kingdom-gold text-kingdom-gold shadow-regal-gold'
-                      : 'bg-blue-950/60 border-blue-400 text-blue-300'
+                      ? 'bg-amber-950/60 border-kingdom-gold shadow-regal-gold'
+                      : 'bg-blue-950/60 border-blue-400'
                   }`}
                 >
                   <PieceIcon
                     type="regent"
                     owner={gameState.activePlayer}
-                    size={36}
+                    size={42}
                   />
                 </div>
                 <div>
@@ -647,4 +735,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-
