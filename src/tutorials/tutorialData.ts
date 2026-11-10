@@ -67,9 +67,9 @@ export const TUTORIAL_SCENARIOS: TutorialScenario[] = [
     title: 'The Rider — The Directional Warrior',
     subtitle: 'Movement depends entirely upon current facing direction.',
     lore: 'Mounted on swift warbeasts carrying mystic spheres, Riders charge along their chosen axis.',
-    instructions: 'Your Rider currently faces North (vertical axis only). Rotate its facing to East to prepare a lateral charge.',
+    instructions: 'Your Rider currently commands the vertical axis (↕). Rotate its axis to horizontal (↔) to prepare a lateral charge.',
     mechanicNote: 'Rotating the Rider consumes your ENTIRE turn. A Rider cannot rotate and move during the same turn.',
-    hint: 'Click your Rider at (4, 4), and in the action panel or rotation controls, choose East (E).',
+    hint: 'Click your Rider at (4, 4), then click "Rotate ↔" in the Special Abilities panel.',
     createScenarioState: () => {
       const rider = createPiece('rider', 'gold', { row: 4, col: 4 }, { orientation: 'N' });
       const goldRegent = createPiece('regent', 'gold', { row: 7, col: 4 });

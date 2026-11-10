@@ -20,9 +20,12 @@ const PIECE_IMAGE: Record<PieceType, string> = {
   soldier: '/pieces/soldier.png',
 };
 
-// Rider orientation label for compass indicator
+// Rider orientation label for compass indicator (bi-directional arrows along movement axis)
 const ORIENTATION_ARROWS: Record<Direction, string> = {
-  N: '↑', E: '→', S: '↓', W: '←',
+  N: '↕',
+  S: '↕',
+  E: '↔',
+  W: '↔',
 };
 
 export const PieceIcon: React.FC<PieceIconProps> = ({

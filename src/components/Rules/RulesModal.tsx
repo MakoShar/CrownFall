@@ -99,9 +99,9 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> Facing N/S moves vertically any distance. Facing E/W moves horizontally any distance.<br />
-                  • <strong>Rotation:</strong> Changing orientation consumes the entire turn.<br />
-                  • <strong>Preservation:</strong> Retains facing direction if converted.
+                  • <strong>Movement:</strong> Vertical axis (↕) moves vertically any distance. Horizontal axis (↔) moves horizontally any distance.<br />
+                  • <strong>Rotation:</strong> Click Rotate ↔ / Rotate ↕ to change axis (consumes the entire turn).<br />
+                  • <strong>Preservation:</strong> Retains facing axis if converted.
                 </p>
               </div>
 

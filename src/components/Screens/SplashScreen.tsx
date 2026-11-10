@@ -262,3 +262,4 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, 
     </div>
   );
 };
+

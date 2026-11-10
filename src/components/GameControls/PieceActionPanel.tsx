@@ -1,7 +1,7 @@
 import React from 'react';
 import { Piece, Direction } from '../../engine/pieces';
 import { Move } from '../../engine/moveGenerator';
-import { Compass, Flame, Shield, Skull, Sparkles, Swords } from 'lucide-react';
+import { Flame, RotateCw, Shield, Skull, Sparkles, Swords } from 'lucide-react';
 
 interface PieceActionPanelProps {
   selectedPiece: Piece | null;
@@ -42,24 +42,23 @@ export const PieceActionPanel: React.FC<PieceActionPanelProps> = ({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {/* Rider Rotations */}
+        {/* Rider Rotation */}
         {rotationMoves.length > 0 && (
-          <div className="flex items-center gap-1 bg-slate-800/90 p-1.5 rounded-lg border border-slate-700">
-            <span className="text-xs text-slate-400 mr-1 flex items-center gap-1">
-              <Compass className="w-3.5 h-3.5 text-blue-400" />
-              Rotate:
-            </span>
-            {rotationMoves.map((m) => (
-              <button
-                key={m.newOrientation}
-                disabled={disabled}
-                onClick={() => onExecuteMove(m)}
-                className="px-2 py-1 rounded bg-slate-700 hover:bg-kingdom-gold hover:text-black text-xs font-bold font-mono transition-colors text-amber-200"
-              >
-                {m.newOrientation}
-              </button>
-            ))}
-          </div>
+          <button
+            disabled={disabled}
+            onClick={() => {
+              const isVertical = selectedPiece.orientation === 'N' || selectedPiece.orientation === 'S';
+              const target = isVertical
+                ? rotationMoves.find((m) => m.newOrientation === 'E') || rotationMoves[0]
+                : rotationMoves.find((m) => m.newOrientation === 'N') || rotationMoves[0];
+              if (target) onExecuteMove(target);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900/80 hover:bg-kingdom-gold hover:text-black text-amber-200 text-xs font-bold transition-all border border-blue-500/50 shadow-md active:scale-95"
+            title="Rotate axis between vertical (↕) and horizontal (↔). Consumes turn."
+          >
+            <RotateCw className="w-3.5 h-3.5" />
+            Rotate {selectedPiece.orientation === 'N' || selectedPiece.orientation === 'S' ? '↔' : '↕'}
+          </button>
         )}
 
         {/* Bastion BASH */}
