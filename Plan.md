@@ -37,7 +37,7 @@ flowchart TD
 - [x] **Rider**: N/S vs E/W directional axis movement, rotation consuming turn, facing visualizer (`engine/riderOrientation.ts`).
 - [x] **Oracle**: Divine Conversion vs Normal Capture choice, sacrifice mechanic, mutual Oracle destruction (`engine/conversionHandler.ts`).
 - [x] **Bastion**: BASH random displacement, crush on trap, Siege Mode unlock, Enhanced 2-Target BASH, Soldier Leap (`engine/bastionAbilities.ts`).
-- [x] **Soldier**: 8-direction movement, Friendly Elimination, baseline promotion to Champion/Rider/Bastion (`engine/promotionHandler.ts`).
+- [x] **Soldier**: Forward & sideways movement (no backward), Friendly Elimination, baseline promotion to Champion/Rider/Bastion (`engine/promotionHandler.ts`).
 
 ### Phase 4: Mutual Regent Capture Endgame [COMPLETED]
 - [x] Normal Regent capture immediate win when capturer is safe.

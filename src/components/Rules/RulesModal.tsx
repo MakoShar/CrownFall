@@ -149,11 +149,11 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                   </div>
                   <div>
                     <div className="font-bold text-amber-200 text-sm">Soldier (Infantry)</div>
-                    <div className="text-[11px] text-slate-400">8-directional infantry & promotion</div>
+                    <div className="text-[11px] text-slate-400">Forward & sideways movement & promotion</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square in all 8 directions.<br />
+                  • <strong>Movement:</strong> 1 square forward or sideways (5 directions: straight forward, forward diagonals, sideways). Cannot move backward.<br />
                   • <strong>Friendly Elimination:</strong> Can sacrifice itself to clear paths.<br />
                   • <strong>Promotion:</strong> Promotes at baseline to Champion, Rider, or Bastion.
                 </p>

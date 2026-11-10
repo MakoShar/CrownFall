@@ -9,23 +9,44 @@ import { SeededRNG } from '../utils/seededRng';
 import { computeAttackMap, isRegentThreatened } from '../engine/attackDetection';
 
 describe('Movement Rules', () => {
-  it('Soldier moves 1 square in all 8 directions', () => {
-    const soldier = createPiece('soldier', 'gold', { row: 4, col: 4 });
-    const state = createInitialGameState({ customPieces: [soldier] });
+  it('Soldier moves only forward or sideways (5 directions), strictly no backward', () => {
+    // Gold Soldier at (4, 4) - forward is row 3, sideways is row 4
+    const goldSoldier = createPiece('soldier', 'gold', { row: 4, col: 4 });
+    const state = createInitialGameState({ customPieces: [goldSoldier] });
     const moves = generateLegalMoves(state.pieces, 'gold');
-    // 8 moves + 1 friendly sacrifice
+
     const destMoves = moves.filter((m) => m.type === 'move');
-    expect(destMoves.length).toBe(8);
+    expect(destMoves.length).toBe(5);
 
     const destinations = destMoves.map((m) => `${m.to!.row},${m.to!.col}`);
+    // Forward (row 3)
     expect(destinations).toContain('3,3');
     expect(destinations).toContain('3,4');
     expect(destinations).toContain('3,5');
+    // Sideways (row 4)
     expect(destinations).toContain('4,3');
     expect(destinations).toContain('4,5');
-    expect(destinations).toContain('5,3');
-    expect(destinations).toContain('5,4');
-    expect(destinations).toContain('5,5');
+    // Backward (row 5) MUST NOT be present
+    expect(destinations).not.toContain('5,3');
+    expect(destinations).not.toContain('5,4');
+    expect(destinations).not.toContain('5,5');
+
+    // Silver Soldier at (4, 4) - forward is row 5, sideways is row 4
+    const silverSoldier = createPiece('soldier', 'silver', { row: 4, col: 4 });
+    const silverMoves = generateLegalMoves([silverSoldier], 'silver').filter((m) => m.type === 'move');
+    expect(silverMoves.length).toBe(5);
+    const silverDests = silverMoves.map((m) => `${m.to!.row},${m.to!.col}`);
+    // Forward (row 5)
+    expect(silverDests).toContain('5,3');
+    expect(silverDests).toContain('5,4');
+    expect(silverDests).toContain('5,5');
+    // Sideways (row 4)
+    expect(silverDests).toContain('4,3');
+    expect(silverDests).toContain('4,5');
+    // Backward (row 3) MUST NOT be present
+    expect(silverDests).not.toContain('3,3');
+    expect(silverDests).not.toContain('3,4');
+    expect(silverDests).not.toContain('3,5');
   });
 
   it('Soldier can eliminate itself (Friendly Soldier Elimination), consuming the turn', () => {

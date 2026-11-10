@@ -1,4 +1,4 @@
-import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, DIAGONAL_DIRECTIONS } from '../config/boardConfig';
+import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, DIAGONAL_DIRECTIONS, getSoldierDirections } from '../config/boardConfig';
 import { Piece, Position, PlayerColor, isSamePosition, positionKey } from './pieces';
 import { isWithinBoard, getPieceAt } from './board';
 
@@ -61,7 +61,6 @@ export function getPieceRawAttackSquares(
 
   switch (piece.type) {
     case 'regent':
-    case 'soldier':
     case 'bastion':
       // 8 surrounding squares
       for (const dir of ALL_8_DIRECTIONS) {
@@ -78,6 +77,25 @@ export function getPieceRawAttackSquares(
         }
       }
       break;
+
+    case 'soldier': {
+      // Forward or sideways only (no backward)
+      const dirs = getSoldierDirections(piece.owner);
+      for (const dir of dirs) {
+        const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
+        if (isWithinBoard(target, config)) {
+          const occupant = getPieceAt(allPieces, target);
+          if (!occupant) {
+            attackSquares.push(target);
+          } else if (occupant.owner === piece.owner) {
+            protectedSquares.push(target);
+          } else {
+            attackSquares.push(target);
+          }
+        }
+      }
+      break;
+    }
 
     case 'champion':
       // All 8 rays

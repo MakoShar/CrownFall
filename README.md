@@ -55,7 +55,7 @@
   - **Soldier Leap**: Jumps over up to two consecutive Soldiers without harming them.
 
 ### 6. SOLDIER — The Infantry
-- **Movement**: Moves 1 square in all 8 directions (forward, backward, sideways, diagonal).
+- **Movement**: Moves 1 square forward or sideways (5 directions: straight forward, forward-left diagonal, forward-right diagonal, sideways left, sideways right). Strictly **no backward** movement.
 - **Friendly Soldier Elimination**: A player can eliminate their own Soldier to unblock files and reshape formations (consumes the turn).
 - **Promotion (The Last Hope)**: Upon reaching the opponent's baseline, promotes immediately into:
   1. Champion

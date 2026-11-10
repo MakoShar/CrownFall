@@ -1,5 +1,5 @@
 import { Position, Piece, isSamePosition, positionKey } from '../engine/pieces';
-import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS } from '../config/boardConfig';
+import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, getSoldierDirections } from '../config/boardConfig';
 import { isWithinBoard, getPieceAt } from '../engine/board';
 
 export interface AStarNode {
@@ -158,6 +158,21 @@ function getPieceNeighbors(
         { dRow: 1, dCol: -1 },
         { dRow: 1, dCol: 1 },
       ];
+      for (const d of dirs) {
+        const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
+        if (isWithinBoard(nextPos, config)) {
+          const occ = getPieceAt(pieces, nextPos);
+          if (!occ || occ.owner !== piece.owner) {
+            neighbors.push(nextPos);
+          }
+        }
+      }
+      break;
+    }
+
+    case 'soldier': {
+      // Forward or sideways only (no backward)
+      const dirs = getSoldierDirections(piece.owner);
       for (const d of dirs) {
         const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
         if (isWithinBoard(nextPos, config)) {

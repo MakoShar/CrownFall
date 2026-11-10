@@ -54,3 +54,15 @@ export const DIAGONAL_DIRECTIONS = [
   { dRow: 1, dCol: 1 },
 ] as const;
 
+export function getSoldierDirections(owner: 'gold' | 'silver'): { dRow: number; dCol: number }[] {
+  const fwd = owner === 'gold' ? -1 : 1;
+  return [
+    { dRow: fwd, dCol: 0 },   // Forward straight
+    { dRow: fwd, dCol: -1 },  // Forward-diagonal left
+    { dRow: fwd, dCol: 1 },   // Forward-diagonal right
+    { dRow: 0, dCol: -1 },    // Sideways left
+    { dRow: 0, dCol: 1 },     // Sideways right
+  ];
+}
+
+

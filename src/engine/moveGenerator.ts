@@ -1,4 +1,4 @@
-import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, DIAGONAL_DIRECTIONS } from '../config/boardConfig';
+import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, DIAGONAL_DIRECTIONS, getSoldierDirections } from '../config/boardConfig';
 import { Piece, Position, PlayerColor, PieceType, isSamePosition, positionKey, clonePiece } from './pieces';
 import { isWithinBoard, getPieceAt, isOpponentBaseline } from './board';
 import { getLegalBashTargets, getConsecutiveSiegeBashTargets, getSoldierLeapMoves } from './bastionAbilities';
@@ -258,8 +258,9 @@ export function generateLegalMoves(
       }
 
       case 'soldier': {
-        // Normal 1-step moves in 8 directions
-        for (const dir of ALL_8_DIRECTIONS) {
+        // Soldier moves only forward or sideways (5 directions: straight forward, forward-left, forward-right, left, right). No backward!
+        const soldierDirs = getSoldierDirections(piece.owner);
+        for (const dir of soldierDirs) {
           const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
           if (isWithinBoard(target, config)) {
             const occupant = getPieceAt(pieces, target);

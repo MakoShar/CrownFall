@@ -157,10 +157,10 @@ export const TUTORIAL_SCENARIOS: TutorialScenario[] = [
     id: 'soldier_sacrifice',
     stepNumber: 7,
     title: 'The Soldier — Infantry Movement & Self-Sacrifice',
-    subtitle: 'Soldiers move 1 step in all 8 directions and can sacrifice themselves to clear lines.',
-    lore: 'Unlike chess pawns, CROWNFALL Soldiers can step in any direction, forward, backward, or diagonally.',
+    subtitle: 'Soldiers advance forward or sideways (no backward) and can sacrifice themselves to clear lines.',
+    lore: 'CROWNFALL Soldiers advance with iron discipline: forward straight, forward-diagonal, or sideways, never retreating backward.',
     instructions: 'Your Soldier at (5, 4) is blocking your Champion\'s line of attack. Eliminate your Soldier via Friendly Sacrifice.',
-    mechanicNote: 'Friendly Soldier Elimination consumes your turn, but allows tactical path clearing and formation shifts.',
+    mechanicNote: 'Soldiers can move forward and sideways, but never backward. Friendly Soldier Elimination consumes your turn to clear paths.',
     hint: 'Click your Soldier at (5, 4) and choose "Sacrifice / Eliminate".',
     createScenarioState: () => {
       const champion = createPiece('champion', 'gold', { row: 6, col: 4 });
