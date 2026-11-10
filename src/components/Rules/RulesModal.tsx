@@ -161,20 +161,20 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Section: Mutual Regent Capture */}
+          {/* Section: Check & Checkmate */}
           <div className="p-4 rounded-xl bg-slate-950/80 border border-red-500/30 space-y-2">
             <h3 className="text-sm font-fantasy font-bold text-red-400 uppercase tracking-wider">
-              3. Mutual Regent Capture — The Sacred Comeback Law
+              3. Check & Checkmate — Chess Defense Doctrine
             </h3>
             <p className="text-slate-300">
-              When Player A captures Player B's Regent:
+              The Kingdom must defend its sovereign Regent under standard chess principles:
             </p>
             <ol className="list-decimal pl-5 space-y-1 text-slate-300">
-              <li>If Player A's own Regent is completely safe, Player A wins immediately.</li>
-              <li>If Player A's Regent is simultaneously threatened, Player B receives <strong>exactly one final response turn</strong>.</li>
-              <li>During this final response, only legal moves that capture Player A's Regent are allowed.</li>
-              <li>If Player B counter-captures Player A's Regent, the match ends in an honorable <strong>DRAW</strong>.</li>
-              <li>If no legal counter-capture is available, Player A wins immediately.</li>
+              <li><strong>Check:</strong> When a Regent is threatened by any enemy unit, it is in CHECK. The commander must escape on their turn.</li>
+              <li><strong>Mandatory Defense:</strong> Any move that leaves or places your own Regent in check is strictly illegal (pinned pieces cannot move off their pin line, and the Regent cannot enter attacked squares).</li>
+              <li><strong>Escaping Check:</strong> You must escape check by moving the Regent to safety, capturing the checking attacker, or interposing a friendly piece to block the attack ray.</li>
+              <li><strong>Checkmate:</strong> If your Regent is in check and no legal move can escape: CHECKMATE! The attacking Kingdom wins immediately.</li>
+              <li><strong>Stalemate:</strong> If a player has no legal moves but is NOT in check, the match concludes in a DRAW.</li>
             </ol>
           </div>
         </div>

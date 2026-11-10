@@ -72,7 +72,7 @@ export const App: React.FC = () => {
   const [lastAiResponse, setLastAiResponse] = useState<AIResponse | null>(null);
 
   // Audio / Sound FX (Synthesized Web Audio API for zero external dependency reliability)
-  const playSoundEffect = (type: 'move' | 'capture' | 'bash' | 'convert' | 'victory') => {
+  const playSoundEffect = (type: 'move' | 'capture' | 'bash' | 'convert' | 'victory' | 'check') => {
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const osc = audioCtx.createOscillator();
@@ -80,7 +80,15 @@ export const App: React.FC = () => {
       osc.connect(gain);
       gain.connect(audioCtx.destination);
 
-      if (type === 'move') {
+      if (type === 'check') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.22);
+      } else if (type === 'move') {
         osc.frequency.setValueAtTime(220, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
         gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
@@ -230,7 +238,9 @@ export const App: React.FC = () => {
       setSelectedPiece(null);
 
       // Play audio cue
-      if (move.type === 'bastion_bash' || move.type === 'siege_bash_two') {
+      if (nextState.statusReason?.includes('CHECK!') || nextState.statusReason?.includes('CHECKMATE!')) {
+        playSoundEffect('check');
+      } else if (move.type === 'bastion_bash' || move.type === 'siege_bash_two') {
         playSoundEffect('bash');
       } else if (move.oracleAction === 'convert') {
         playSoundEffect('convert');
@@ -430,11 +440,19 @@ export const App: React.FC = () => {
               <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
                 Turn {gameState.turnNumber}
               </span>
-              {gameState.status === 'mutual_regent_response' && (
-                <span className="px-2 py-0.5 rounded bg-red-900/80 text-yellow-200 text-[10px] font-extrabold border border-red-500 animate-pulse">
-                  MUTUAL STRIKE RESPONSE
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {attackMap.regentThreatened[gameState.activePlayer] && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black tracking-widest border border-red-400 animate-pulse flex items-center gap-1 shadow-lg shadow-red-900/50">
+                    <ShieldAlert className="w-3 h-3" />
+                    CHECK!
+                  </span>
+                )}
+                {gameState.status === 'mutual_regent_response' && (
+                  <span className="px-2 py-0.5 rounded bg-red-900/80 text-yellow-200 text-[10px] font-extrabold border border-red-500 animate-pulse">
+                    MUTUAL STRIKE RESPONSE
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between">

@@ -9,6 +9,7 @@ import { executePromotion, canSoldierPromote } from './promotionHandler';
 import { GameStatus, handleRegentCapture } from './endgameHandler';
 import { createInitialPieces } from '../config/startingFormation';
 import { getPieceAt, formatPosition } from './board';
+import { isRegentThreatened } from './attackDetection';
 
 export interface GameHistoryEntry {
   move: Move;
@@ -270,6 +271,34 @@ export function applyMove(state: GameState, move: Move): { nextState: GameState;
         }
       }
       break;
+    }
+  }
+
+  // Check & Checkmate detection according to normal chess rules
+  if (next.status === 'in_progress') {
+    const opponentRegent = next.pieces.find((p) => p.owner === opponent && p.type === 'regent');
+    if (opponentRegent) {
+      const opponentInCheck = isRegentThreatened(next.pieces, opponent, next.config);
+      const opponentLegalMoves = generateLegalMoves(next.pieces, opponent, { config: next.config });
+
+      if (opponentLegalMoves.length === 0) {
+        if (opponentInCheck) {
+          // CHECKMATE! Opposing Regent cannot escape
+          next.status = player === 'gold' ? 'gold_victory' : 'silver_victory';
+          next.winner = player;
+          next.statusReason = `CHECKMATE! ${opponent.toUpperCase()} Regent is trapped in check with no escape. ${player.toUpperCase()} Kingdom wins!`;
+          moveDescription += ` [CHECKMATE!]`;
+        } else {
+          // STALEMATE! No legal moves and not in check
+          next.status = 'draw';
+          next.winner = 'draw';
+          next.statusReason = `STALEMATE! ${opponent.toUpperCase()} Kingdom has no legal moves. The match ends in a DRAW!`;
+          moveDescription += ` [STALEMATE!]`;
+        }
+      } else if (opponentInCheck) {
+        moveDescription += ` [CHECK!]`;
+        next.statusReason = `${opponent.toUpperCase()} Regent is in CHECK!`;
+      }
     }
   }
 

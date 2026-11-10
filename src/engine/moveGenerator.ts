@@ -1,10 +1,11 @@
 import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, DIAGONAL_DIRECTIONS, getSoldierDirections } from '../config/boardConfig';
-import { Piece, Position, PlayerColor, PieceType, isSamePosition, positionKey, clonePiece } from './pieces';
+import { Piece, Position, PlayerColor, PieceType, isSamePosition, positionKey, clonePiece, clonePosition } from './pieces';
 import { isWithinBoard, getPieceAt, isOpponentBaseline } from './board';
 import { getLegalBashTargets, getConsecutiveSiegeBashTargets, getSoldierLeapMoves } from './bastionAbilities';
 import { getLegalRotations } from './riderOrientation';
 import { isConvertibleByOracle } from './conversionHandler';
 import { VALID_PROMOTION_CHOICES } from './promotionHandler';
+import { isRegentThreatened } from './attackDetection';
 
 export type MoveType =
   | 'move'
@@ -327,6 +328,94 @@ export function generateLegalMoves(
     }
   }
 
-  return moves;
+  // Enforce chess-style check rule:
+  // A player cannot make any move that leaves or puts their own Regent in check
+  return moves.filter((m) => {
+    const after = simulateMovePieces(pieces, m, config);
+    return !isRegentThreatened(after, activePlayer, config);
+  });
+}
+
+export function simulateMovePieces(
+  pieces: Piece[],
+  move: Move,
+  config: BoardConfig = DEFAULT_BOARD_CONFIG
+): Piece[] {
+  switch (move.type) {
+    case 'rider_rotate': {
+      return pieces.map((p) => {
+        if (p.id === move.pieceId) {
+          const c = clonePiece(p);
+          if (move.newOrientation) c.orientation = move.newOrientation;
+          return c;
+        }
+        return p;
+      });
+    }
+
+    case 'soldier_sacrifice': {
+      return pieces.filter((p) => p.id !== move.pieceId);
+    }
+
+    case 'bastion_bash': {
+      const target = pieces.find((p) => p.id === move.targetPieceId);
+      if (!target) return pieces;
+      // In BASH, target piece is displaced or destroyed away from its square
+      return pieces.filter((p) => p.id !== target.id);
+    }
+
+    case 'siege_bash_two': {
+      const bastion = pieces.find((p) => p.id === move.pieceId);
+      if (!bastion || !move.to) return pieces;
+      return pieces
+        .filter((p) => p.id !== move.targetPieceId && p.id !== move.secondTargetPieceId)
+        .map((p) => {
+          if (p.id === bastion.id) {
+            const c = clonePiece(p);
+            c.position = clonePosition(move.to!);
+            return c;
+          }
+          return p;
+        });
+    }
+
+    case 'move': {
+      if (!move.to) return pieces;
+      const moving = pieces.find((p) => p.id === move.pieceId);
+      if (!moving) return pieces;
+
+      if (moving.type === 'oracle' && move.targetPieceId && move.oracleAction === 'convert') {
+        // Oracle is destroyed, target piece switches owner to moving.owner on the same square
+        return pieces
+          .filter((p) => p.id !== moving.id)
+          .map((p) => {
+            if (p.id === move.targetPieceId) {
+              const c = clonePiece(p);
+              c.owner = moving.owner;
+              return c;
+            }
+            return p;
+          });
+      }
+
+      // Normal move or capture
+      return pieces
+        .filter((p) => p.id !== move.targetPieceId)
+        .map((p) => {
+          if (p.id === moving.id) {
+            const c = clonePiece(p);
+            c.position = clonePosition(move.to!);
+            if (c.type === 'soldier' && move.promotionChoice) {
+              c.type = move.promotionChoice;
+            }
+            return c;
+          }
+          return p;
+        });
+    }
+
+    default:
+      return pieces;
+  }
 }
 

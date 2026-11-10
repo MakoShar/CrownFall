@@ -104,6 +104,12 @@ export const Board: React.FC<BoardProps> = ({
                   ? 'bg-gradient-to-br from-slate-700/90 to-slate-800/90'
                   : 'bg-gradient-to-br from-slate-900 to-black';
 
+                // Check status on Regent (always visible, even without tactical overlay)
+                const isRegentInCheck = pieceOnSquare?.type === 'regent' && (
+                  (pieceOnSquare.owner === 'gold' && attackMap?.regentThreatened.gold) ||
+                  (pieceOnSquare.owner === 'silver' && attackMap?.regentThreatened.silver)
+                );
+
                 // Tactical overlay indicators
                 const isGoldControlled = showTacticalOverlay && attackMap?.controlledSquares.gold.has(key);
                 const isSilverControlled = showTacticalOverlay && attackMap?.controlledSquares.silver.has(key);
@@ -123,13 +129,21 @@ export const Board: React.FC<BoardProps> = ({
                       }
                     }}
                     className={`aspect-square relative flex items-center justify-center transition-all duration-150 cursor-pointer overflow-hidden ${baseBg} ${
-                      isSelected
+                      isRegentInCheck
+                        ? 'ring-2 ring-red-500 ring-inset bg-red-950/70 shadow-[0_0_20px_rgba(239,68,68,0.8)]'
+                        : isSelected
                         ? 'ring-2 ring-kingdom-gold ring-inset bg-amber-950/40'
                         : isLastMoveFrom || isLastMoveTo
                         ? 'ring-1 ring-amber-500/60 ring-inset bg-amber-900/20'
                         : 'hover:brightness-110'
                     }`}
                   >
+                    {/* Regent in Check Warning Badge */}
+                    {isRegentInCheck && (
+                      <span className="absolute top-0.5 right-0.5 z-30 px-1 py-0.2 rounded bg-red-600 text-white text-[8px] font-black uppercase tracking-wider border border-red-300 shadow animate-pulse">
+                        CHECK!
+                      </span>
+                    )}
                     {/* Tactical Overlay Heatmaps */}
                     {showTacticalOverlay && (
                       <div className="absolute inset-0 pointer-events-none">

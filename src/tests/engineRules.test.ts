@@ -389,4 +389,93 @@ describe('Win Conditions and Mutual Regent Capture', () => {
     expect(nextState.status).toBe('gold_victory');
     expect(nextState.winner).toBe('gold');
   });
+
+  describe('Chess Check and Checkmate Rules', () => {
+    it('Regent cannot move into an attacked square (cannot step into check)', () => {
+      const goldRegent = createPiece('regent', 'gold', { row: 4, col: 4 });
+      const silverChampion = createPiece('champion', 'silver', { row: 0, col: 5 });
+      const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
+
+      const state = createInitialGameState({ customPieces: [goldRegent, silverChampion, silverRegent] });
+      const moves = generateLegalMoves(state.pieces, 'gold');
+
+      // Column 5 is under attack by Silver Champion: (3,5), (4,5), (5,5) must be illegal for Gold Regent
+      const illegalCol5Moves = moves.filter((m) => m.to && m.to.col === 5);
+      expect(illegalCol5Moves.length).toBe(0);
+
+      // Squares in column 3 or 4 (away from attack) should be legal
+      const safeMoves = moves.filter((m) => m.to && m.to.col !== 5);
+      expect(safeMoves.length).toBeGreaterThan(0);
+    });
+
+    it('When in check, player must resolve check; moves that do not escape check are illegal', () => {
+      const goldRegent = createPiece('regent', 'gold', { row: 7, col: 4 });
+      const silverChampion = createPiece('champion', 'silver', { row: 0, col: 4 }); // Checks Regent
+      const goldSoldier = createPiece('soldier', 'gold', { row: 6, col: 0 }); // Away on column 0
+      const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
+
+      const state = createInitialGameState({
+        customPieces: [goldRegent, silverChampion, goldSoldier, silverRegent],
+      });
+
+      const moves = generateLegalMoves(state.pieces, 'gold');
+
+      // The soldier at (6,0) cannot move because moving it does not stop the check!
+      const soldierMoves = moves.filter((m) => m.pieceId === goldSoldier.id);
+      expect(soldierMoves.length).toBe(0);
+
+      // Only Regent can move, and only to squares off column 4 (e.g. col 3 or col 5)
+      expect(moves.every((m) => m.pieceId === goldRegent.id)).toBe(true);
+      expect(moves.every((m) => m.to && m.to.col !== 4)).toBe(true);
+    });
+
+    it('Pinned piece cannot move away if moving it exposes Regent to check', () => {
+      const goldRegent = createPiece('regent', 'gold', { row: 7, col: 4 });
+      const goldSoldier = createPiece('soldier', 'gold', { row: 5, col: 4 }); // Blocks ray
+      const silverChampion = createPiece('champion', 'silver', { row: 0, col: 4 }); // Pins soldier
+      const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
+
+      const state = createInitialGameState({
+        customPieces: [goldRegent, goldSoldier, silverChampion, silverRegent],
+      });
+
+      const moves = generateLegalMoves(state.pieces, 'gold');
+
+      // Sideways moves (5,3) or (5,5) for the soldier open column 4 to the Regent, so they are illegal
+      const soldierSideways = moves.filter(
+        (m) => m.pieceId === goldSoldier.id && m.to && m.to.col !== 4
+      );
+      expect(soldierSideways.length).toBe(0);
+    });
+
+    it('Checkmate: delivering check with no possible escape triggers immediate victory', () => {
+      // Cornered Silver Regent at (0, 0)
+      // Blocked from below by own soldiers at (1, 0) and (1, 1)
+      // Rank 0 is open, Gold Champion slides to (0, 2) giving direct check along rank 0
+      const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
+      const silverSoldier1 = createPiece('soldier', 'silver', { row: 1, col: 0 });
+      const silverSoldier2 = createPiece('soldier', 'silver', { row: 1, col: 1 });
+      const goldChampion = createPiece('champion', 'gold', { row: 0, col: 7 });
+      const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
+
+      const state = createInitialGameState({
+        customPieces: [silverRegent, silverSoldier1, silverSoldier2, goldChampion, goldRegent],
+      });
+
+      // Gold Champion slides from (0, 7) to (0, 2), giving direct check to Silver Regent at (0, 0)
+      const mateMove = {
+        type: 'move' as const,
+        pieceId: goldChampion.id,
+        from: { row: 0, col: 7 },
+        to: { row: 0, col: 2 },
+      };
+
+      const { nextState } = applyMove(state, mateMove);
+
+      // Silver has 0 legal moves and is in check -> CHECKMATE!
+      expect(nextState.status).toBe('gold_victory');
+      expect(nextState.winner).toBe('gold');
+      expect(nextState.statusReason).toContain('CHECKMATE');
+    });
+  });
 });
