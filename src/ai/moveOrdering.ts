@@ -57,3 +57,4 @@ function scoreMovePriority(move: Move, state: GameState): number {
 
   return score;
 }
+

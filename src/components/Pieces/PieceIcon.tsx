@@ -6,7 +6,7 @@ interface PieceIconProps {
   owner: PlayerColor;
   orientation?: Direction;
   isSiegeMode?: boolean;
-  size?: number;
+  size?: number | string;
   className?: string;
 }
 
@@ -15,7 +15,7 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
   owner,
   orientation = 'N',
   isSiegeMode = false,
-  size = 48,
+  size = '100%',
   className = '',
 }) => {
   const isGold = owner === 'gold';
@@ -246,3 +246,4 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
     </svg>
   );
 };
+

@@ -111,3 +111,4 @@ export const MatchResultModal: React.FC<MatchResultModalProps> = ({
     </div>
   );
 };
+

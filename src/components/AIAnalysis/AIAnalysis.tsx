@@ -682,3 +682,4 @@ const MinimaxNodeView: React.FC<{ node: MinimaxTreeNode; isRoot?: boolean }> = (
     </div>
   );
 };
+

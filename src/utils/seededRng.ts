@@ -45,3 +45,4 @@ export class SeededRNG {
     return rng;
   }
 }
+

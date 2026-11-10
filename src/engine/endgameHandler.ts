@@ -41,3 +41,4 @@ export function handleRegentCapture(
     reason: `MUTUAL THREAT! ${capturingPlayer.toUpperCase()} captured the Regent, but their own Regent is under direct threat! The opponent has one final response turn to strike back!`,
   };
 }
+

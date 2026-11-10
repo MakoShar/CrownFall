@@ -318,61 +318,108 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Battlefield Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-2 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Match Controls, Turn Indicator, Mode Select */}
-        <div className="lg:col-span-3 space-y-4">
-          {/* Turn Status Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-xl">
-            <div className="flex items-center justify-between mb-2">
+      {/* Main Battlefield Workspace: Left side ONLY the Grid, Right side ALL the controls */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 md:p-6 flex flex-col lg:flex-row items-start justify-center gap-6">
+        {/* Left Column: ONLY the Grid */}
+        <div className="w-full lg:w-[56%] xl:w-[58%] flex items-center justify-center min-w-0">
+          <Board
+            gameState={gameState}
+            selectedPiece={selectedPiece}
+            legalMoves={legalMovesForSelected}
+            attackMap={attackMap}
+            showTacticalOverlay={showTacticalOverlay}
+            onPieceClick={handlePieceClick}
+            onSquareClick={handleSquareClick}
+            isInteractive={!isAiThinking && (gameState.status === 'in_progress' || gameState.status === 'mutual_regent_response')}
+          />
+        </div>
+
+        {/* Right Column: ALL the things (controls, status, abilities, history, AI telemetry) */}
+        <div className="w-full lg:w-[44%] xl:w-[42%] flex flex-col space-y-4 min-w-0">
+          {/* 1. Turn & Kingdom Status Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
                 Turn {gameState.turnNumber}
               </span>
               {gameState.status === 'mutual_regent_response' && (
                 <span className="px-2 py-0.5 rounded bg-red-900/80 text-yellow-200 text-[10px] font-extrabold border border-red-500 animate-pulse">
-                  MUTUAL STRIKE
+                  MUTUAL STRIKE RESPONSE
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 shadow-lg ${
-                  gameState.activePlayer === 'gold'
-                    ? 'bg-amber-950/60 border-kingdom-gold text-kingdom-gold shadow-regal-gold'
-                    : 'bg-blue-950/60 border-blue-400 text-blue-300'
-                }`}
-              >
-                <PieceIcon
-                  type="regent"
-                  owner={gameState.activePlayer}
-                  size={36}
-                />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 shadow-lg ${
+                    gameState.activePlayer === 'gold'
+                      ? 'bg-amber-950/60 border-kingdom-gold text-kingdom-gold shadow-regal-gold'
+                      : 'bg-blue-950/60 border-blue-400 text-blue-300'
+                  }`}
+                >
+                  <PieceIcon
+                    type="regent"
+                    owner={gameState.activePlayer}
+                    size={36}
+                  />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Active Command</div>
+                  <div className="text-lg font-fantasy font-bold text-amber-200 capitalize">
+                    {gameState.activePlayer} Kingdom
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs text-slate-400 font-medium">Active Kingdom</div>
-                <div className="text-lg font-fantasy font-bold text-amber-200 capitalize">
-                  {gameState.activePlayer} Kingdom
+
+              {/* Force Counters */}
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/30 text-right">
+                  <div className="text-[10px] uppercase font-bold text-amber-400 flex items-center justify-end gap-1">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    Gold
+                  </div>
+                  <div className="text-sm font-mono font-bold text-slate-200">
+                    {goldPiecesRemaining.length} <span className="text-xs text-slate-500 font-normal">/ 16</span>
+                  </div>
+                </div>
+
+                <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-blue-500/30 text-right">
+                  <div className="text-[10px] uppercase font-bold text-blue-400 flex items-center justify-end gap-1">
+                    <span className="w-2 h-2 rounded-full bg-blue-400" />
+                    Silver
+                  </div>
+                  <div className="text-sm font-mono font-bold text-slate-200">
+                    {silverPiecesRemaining.length} <span className="text-xs text-slate-500 font-normal">/ 16</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {isAiThinking && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-purple-300 font-semibold bg-purple-950/40 p-2 rounded-lg border border-purple-800/50">
+              <div className="flex items-center gap-2 text-xs text-purple-300 font-semibold bg-purple-950/40 p-2.5 rounded-lg border border-purple-800/50 animate-pulse">
                 <Bot className="w-4 h-4 text-purple-400 animate-spin" />
-                AI pondering tactical permutations...
+                AI is searching tactical move permutations...
               </div>
             )}
           </div>
 
-          {/* Game Mode & AI Difficulty Controls */}
+          {/* 2. Piece Special Action Panel (Rider Rotations, Bastion BASH, Soldier Sacrifice) */}
+          <PieceActionPanel
+            selectedPiece={selectedPiece}
+            legalMoves={legalMovesForSelected}
+            onExecuteMove={executeFinalMove}
+            disabled={isAiThinking}
+          />
+
+          {/* 3. Game Mode & AI Difficulty Controls */}
           <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
             <div className="text-xs uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
               <Settings className="w-3.5 h-3.5 text-kingdom-gold" />
               Game Modes
             </div>
 
-            <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
               <button
                 onClick={() => { setGameMode('human_vs_human'); handleRestart(); }}
                 className={`py-2 rounded-lg text-xs font-semibold transition-all flex flex-col items-center gap-1 ${
@@ -408,14 +455,14 @@ export const App: React.FC = () => {
               </button>
             </div>
 
-            {/* Difficulty Selector */}
+            {/* AI Skill Level Selector */}
             {gameMode !== 'human_vs_human' && (
               <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
                 <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
                   <span>AI Skill Level:</span>
                   <span className="text-amber-300 font-bold capitalize">{aiDifficulty}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-3 gap-1.5">
                   {(['beginner', 'intermediate', 'expert'] as AIDifficulty[]).map((d) => (
                     <button
                       key={d}
@@ -454,7 +501,7 @@ export const App: React.FC = () => {
             )}
           </div>
 
-          {/* Tactical Overlay Toggle & Action Buttons */}
+          {/* 4. Tactical Overlay Toggle & Game Actions */}
           <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
@@ -480,72 +527,25 @@ export const App: React.FC = () => {
               <button
                 disabled={gameState.history.length === 0 || isAiThinking}
                 onClick={handleUndo}
-                className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs font-semibold text-slate-300 transition-colors"
+                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs font-semibold text-slate-300 transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Undo Move
               </button>
               <button
                 onClick={handleRestart}
-                className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors"
+                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-red-400" />
-                Restart
+                Restart Match
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Center Column: The Battlefield Grid & Special Piece Controls */}
-        <div className="lg:col-span-6 flex flex-col items-center">
-          {/* Silver Kingdom Army Graveyard / Remaining Counter */}
-          <div className="w-full flex items-center justify-between px-4 py-2 bg-slate-950/80 rounded-xl border border-slate-800/80 mb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-400 shadow-md shadow-blue-400/50" />
-              <span className="text-xs font-fantasy font-bold text-blue-200">Silver Kingdom</span>
-            </div>
-            <div className="text-xs text-slate-400 font-mono">
-              Forces: <strong className="text-blue-300">{silverPiecesRemaining.length}</strong> / 16
-            </div>
-          </div>
-
-          {/* Interactive Board */}
-          <Board
-            gameState={gameState}
-            selectedPiece={selectedPiece}
-            legalMoves={legalMovesForSelected}
-            attackMap={attackMap}
-            showTacticalOverlay={showTacticalOverlay}
-            onPieceClick={handlePieceClick}
-            onSquareClick={handleSquareClick}
-            isInteractive={!isAiThinking && (gameState.status === 'in_progress' || gameState.status === 'mutual_regent_response')}
-          />
-
-          {/* Piece Special Action Panel (Rider Rotations, Bastion BASH, Soldier Sacrifice) */}
-          <PieceActionPanel
-            selectedPiece={selectedPiece}
-            legalMoves={legalMovesForSelected}
-            onExecuteMove={executeFinalMove}
-            disabled={isAiThinking}
-          />
-
-          {/* Gold Kingdom Army Graveyard / Remaining Counter */}
-          <div className="w-full flex items-center justify-between px-4 py-2 bg-slate-950/80 rounded-xl border border-slate-800/80 mt-2">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-400 shadow-md shadow-amber-400/50" />
-              <span className="text-xs font-fantasy font-bold text-amber-200">Gold Kingdom</span>
-            </div>
-            <div className="text-xs text-slate-400 font-mono">
-              Forces: <strong className="text-amber-300">{goldPiecesRemaining.length}</strong> / 16
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Move History & Real-Time Tactical AI Feedback */}
-        <div className="lg:col-span-3 space-y-4">
+          {/* 5. Move History (Battle Chronicle) */}
           <MoveHistory history={gameState.history} />
 
-          {/* Last AI Decision Telemetry Card */}
+          {/* 6. Last AI Decision Telemetry Card */}
           {lastAiResponse && (
             <div className="p-4 rounded-xl bg-slate-950 border border-purple-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs">
@@ -569,7 +569,7 @@ export const App: React.FC = () => {
             </div>
           )}
 
-          {/* Tactical Advice & Quotes */}
+          {/* 7. Strategic Doctrine Quote Card */}
           <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400 space-y-2">
             <div className="font-bold text-amber-300 uppercase tracking-wider text-[11px] flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-kingdom-gold" />
@@ -647,3 +647,4 @@ export const App: React.FC = () => {
     </div>
   );
 };
+

@@ -198,3 +198,4 @@ export function checkAndApplySiegeMode(
   }
   return false;
 }
+

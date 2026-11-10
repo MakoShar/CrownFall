@@ -187,3 +187,4 @@ function getPieceNeighbors(
 
   return neighbors;
 }
+

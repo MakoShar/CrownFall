@@ -31,3 +31,4 @@ export function formatPosition(pos: Position): string {
   const rankNumber = 8 - pos.row; // chess-like rank notation: row 7 -> 1, row 0 -> 8
   return `${fileLetter}${rankNumber}`;
 }
+

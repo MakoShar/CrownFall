@@ -58,3 +58,4 @@ export const MoveHistory: React.FC<MoveHistoryProps> = ({ history }) => {
     </div>
   );
 };
+

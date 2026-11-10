@@ -82,3 +82,4 @@ export const PromotionDialog: React.FC<PromotionDialogProps> = ({
     </div>
   );
 };
+

@@ -291,3 +291,4 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onClose }) => {
     </div>
   );
 };
+

@@ -294,3 +294,4 @@ export function applyMove(state: GameState, move: Move): { nextState: GameState;
 
   return { nextState: next, log: moveDescription };
 }
+

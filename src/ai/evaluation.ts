@@ -111,3 +111,4 @@ export function evaluatePosition(
 
   return score;
 }
+

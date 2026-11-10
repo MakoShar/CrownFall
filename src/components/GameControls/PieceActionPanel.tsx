@@ -112,3 +112,4 @@ export const PieceActionPanel: React.FC<PieceActionPanelProps> = ({
     </div>
   );
 };
+

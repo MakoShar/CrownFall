@@ -25,3 +25,4 @@ export function executeRiderRotation(
     return clonePiece(p);
   });
 }
+

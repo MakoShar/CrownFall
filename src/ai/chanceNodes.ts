@@ -68,3 +68,4 @@ export function getChanceOutcomes(state: GameState, move: Move): ChanceOutcome[]
 
   return outcomes;
 }
+

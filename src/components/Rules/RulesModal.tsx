@@ -182,3 +182,4 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
     </div>
   );
 };
+
