@@ -389,62 +389,70 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-kingdom-obsidian text-slate-100 flex flex-col font-sans">
       {/* Top Regal Navigation Bar */}
-      <header className="px-4 py-3 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 shadow-xl flex items-center justify-between">
-        {/* Left: Logo + back button */}
-        <div className="flex items-center gap-3">
+      <header className="px-2.5 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 shadow-xl flex items-center justify-between">
+        {/* Left: Logo + back button + Title */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={handleBackToMenu}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors mr-1"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors"
             title="Back to Main Menu"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Menu</span>
           </button>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-kingdom-gold via-amber-600 to-amber-800 flex items-center justify-center shadow-regal-gold border border-amber-300 overflow-hidden">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-kingdom-gold via-amber-600 to-amber-800 flex items-center justify-center shadow-regal-gold border border-amber-300 overflow-hidden shrink-0">
             <img src="/pieces/regent.png" alt="Crown" className="w-full h-full object-cover object-top" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-fantasy font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-kingdom-gold to-yellow-500">
-              CROWNFALL
-            </h1>
-            <p className="text-[10px] tracking-widest uppercase font-semibold text-slate-400">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h1 className="text-base sm:text-2xl font-fantasy font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-kingdom-gold to-yellow-500 leading-tight">
+                CROWNFALL
+              </h1>
+              <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
+                Chess with Mods
+              </span>
+            </div>
+            <p className="text-[9px] sm:text-[10px] tracking-wider uppercase font-semibold text-slate-400 hidden xs:block">
               The Last Kingdom — Original Tactical Strategy
             </p>
           </div>
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setShowTutorial(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-200 border border-slate-700 transition-colors"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-200 border border-slate-700 transition-colors"
+            title="Interactive Academy"
           >
-            <GraduationCap className="w-4 h-4 text-kingdom-gold" />
+            <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-kingdom-gold" />
             <span className="hidden sm:inline">Academy</span>
           </button>
 
           <button
             onClick={() => setShowRules(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors"
+            title="Chess with Mods Codex"
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Codex</span>
           </button>
 
           <button
             onClick={() => setShowAIAnalysis(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 text-xs font-bold text-purple-200 border border-purple-500/50 shadow-md transition-all"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 text-xs font-bold text-purple-200 border border-purple-500/50 shadow-md transition-all"
+            title="AI Decision Analysis"
           >
-            <Brain className="w-4 h-4 text-purple-300 animate-pulse" />
-            AI Analysis
+            <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-300 animate-pulse" />
+            <span className="hidden sm:inline">AI Analysis</span>
           </button>
         </div>
       </header>
 
-      {/* Main Battlefield Workspace: Left side ONLY the Grid, Right side ALL the controls */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 md:p-6 flex flex-col lg:flex-row items-start justify-center gap-6">
-        {/* Left Column: ONLY the Grid */}
-        <div className="w-full lg:w-[56%] xl:w-[58%] flex items-center justify-center min-w-0">
+      {/* Main Battlefield Workspace: Optimized for Maximum Mobile Board Scaling */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-1 sm:px-4 py-2 sm:py-4 md:py-6 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-3 sm:gap-6">
+        {/* Left Column: Board + Active Piece Mods Bar */}
+        <div className="w-full lg:w-[56%] xl:w-[58%] flex flex-col items-center justify-center min-w-0 space-y-2">
           <Board
             gameState={gameState}
             selectedPiece={selectedPiece}
@@ -455,10 +463,20 @@ export const App: React.FC = () => {
             onSquareClick={handleSquareClick}
             isInteractive={!isAiThinking && (gameState.status === 'in_progress' || gameState.status === 'mutual_regent_response')}
           />
+
+          {/* Piece Special Action & Mod Panel directly under the board for immediate mobile thumb reach */}
+          <div className="w-full max-w-[min(calc(100vw-12px),calc(100vh-210px),620px)]">
+            <PieceActionPanel
+              selectedPiece={selectedPiece}
+              legalMoves={legalMovesForSelected}
+              onExecuteMove={executeFinalMove}
+              disabled={isAiThinking}
+            />
+          </div>
         </div>
 
-        {/* Right Column: ALL the things (controls, status, abilities, history, AI telemetry) */}
-        <div className="w-full lg:w-[44%] xl:w-[42%] flex flex-col space-y-4 min-w-0">
+        {/* Right Column: Command Status, Controls, History & AI Telemetry */}
+        <div className="w-full lg:w-[44%] xl:w-[42%] flex flex-col space-y-3 sm:space-y-4 min-w-0 max-w-[620px] lg:max-w-none">
           {/* 1. Turn & Kingdom Status Card */}
           <div className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
@@ -535,16 +553,49 @@ export const App: React.FC = () => {
             )}
           </div>
 
-          {/* 2. Piece Special Action Panel (Rider Rotations, Bastion BASH, Soldier Sacrifice) */}
-          <PieceActionPanel
-            selectedPiece={selectedPiece}
-            legalMoves={legalMovesForSelected}
-            onExecuteMove={executeFinalMove}
-            disabled={isAiThinking}
-          />
+          {/* 2. Tactical Overlay Toggle & Game Actions */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4 text-kingdom-gold" />
+                Tactical Attack-Map Overlay
+              </span>
+              <button
+                onClick={() => setShowTacticalOverlay(!showTacticalOverlay)}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                  showTacticalOverlay
+                    ? 'bg-kingdom-gold text-black'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                {showTacticalOverlay ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Visualizes controlled zones, protected units, pinned lines, and threatened pieces.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+              <button
+                disabled={gameState.history.length === 0 || isAiThinking}
+                onClick={handleUndo}
+                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs font-semibold text-slate-300 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Undo Move
+              </button>
+              <button
+                onClick={handleRestart}
+                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-red-400" />
+                Restart Match
+              </button>
+            </div>
+          </div>
 
           {/* 3. Game Mode & AI Difficulty Controls */}
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
             <div className="text-xs uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
               <Settings className="w-3.5 h-3.5 text-kingdom-gold" />
               Game Modes
@@ -630,47 +681,6 @@ export const App: React.FC = () => {
                 </button>
               </div>
             )}
-          </div>
-
-          {/* 4. Tactical Overlay Toggle & Game Actions */}
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <ShieldAlert className="w-4 h-4 text-kingdom-gold" />
-                Tactical Attack-Map Overlay
-              </span>
-              <button
-                onClick={() => setShowTacticalOverlay(!showTacticalOverlay)}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                  showTacticalOverlay
-                    ? 'bg-kingdom-gold text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                {showTacticalOverlay ? 'ON' : 'OFF'}
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-500">
-              Visualizes controlled zones, protected units, pinned lines, and threatened pieces.
-            </p>
-
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-              <button
-                disabled={gameState.history.length === 0 || isAiThinking}
-                onClick={handleUndo}
-                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs font-semibold text-slate-300 transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Undo Move
-              </button>
-              <button
-                onClick={handleRestart}
-                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-red-400" />
-                Restart Match
-              </button>
-            </div>
           </div>
 
           {/* 5. Move History (Battle Chronicle) */}

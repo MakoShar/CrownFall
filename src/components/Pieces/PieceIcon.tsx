@@ -64,12 +64,12 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
         alt={type}
         draggable={false}
         style={{
-          width: '90%',
-          height: '90%',
+          width: '95%',
+          height: '95%',
           objectFit: 'cover',
           objectPosition: 'top',
           filter: isSiegeMode ? siegeFilter : filter,
-          borderRadius: '10%',
+          borderRadius: '12%',
           transition: 'filter 0.3s ease',
           display: 'block',
         }}
@@ -79,8 +79,8 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
       <div
         style={{
           position: 'absolute',
-          inset: '3%',
-          borderRadius: '12%',
+          inset: '2%',
+          borderRadius: '14%',
           border: `2px solid ${isGold ? 'rgba(245,158,11,0.5)' : 'rgba(148,163,184,0.4)'}`,
           boxShadow: isGold
             ? '0 0 8px rgba(245,158,11,0.4), inset 0 0 4px rgba(245,158,11,0.1)'
@@ -96,20 +96,22 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
             position: 'absolute',
             top: '2px',
             right: '2px',
-            width: '18px',
-            height: '18px',
-            borderRadius: '50%',
-            background: isGold ? 'rgba(245,158,11,0.9)' : 'rgba(56,189,248,0.9)',
+            minWidth: '16px',
+            height: '16px',
+            padding: '0 2px',
+            borderRadius: '8px',
+            background: isGold ? 'rgba(245,158,11,0.95)' : 'rgba(56,189,248,0.95)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '11px',
             lineHeight: 1,
             color: '#000',
-            fontWeight: 'bold',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.6)',
+            fontWeight: '900',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.7)',
             zIndex: 5,
           }}
+          title={orientation === 'N' || orientation === 'S' ? 'Vertical Axis (↕)' : 'Horizontal Axis (↔)'}
         >
           {ORIENTATION_ARROWS[orientation]}
         </div>
@@ -122,14 +124,14 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
             position: 'absolute',
             top: '2px',
             left: '2px',
-            width: '18px',
-            height: '18px',
+            width: '16px',
+            height: '16px',
             borderRadius: '50%',
             background: 'rgba(220,38,38,0.95)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '11px',
+            fontSize: '10px',
             lineHeight: 1,
             boxShadow: '0 0 8px rgba(220,38,38,0.8)',
             zIndex: 5,

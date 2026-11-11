@@ -9,13 +9,14 @@ interface SplashScreenProps {
 
 const PIECE_NAMES = ['regent', 'champion', 'rider', 'oracle', 'bastion', 'soldier'];
 const PIECE_LABELS = ['Regent', 'Champion', 'Rider', 'Oracle', 'Bastion', 'Soldier'];
+const PIECE_MOD_ARCHETYPES = ['King Mod', 'Queen Mod', 'Rook Mod', 'Bishop Mod', 'Castle Mod', 'Pawn Mod'];
 const PIECE_SUBTITLES = [
-  'The Commander',
-  'The Supreme Warrior',
-  'The Directional Warrior',
-  'The Divine Messenger',
-  'The Siege Guardian',
-  'The Infantry',
+  'King Mod • Royal Commander (Check & Checkmate)',
+  'Queen Mod • Supreme Warrior & Divine Immunity',
+  'Rook Mod • Directional Charge & Axis Rotate Mod',
+  'Bishop Mod • Diagonal Stride & Divine Conversion Mod',
+  'Castle Mod • Heavy Guardian, BASH & Siege Mods',
+  'Pawn Mod • 5-Way Advance, Sacrifice & Promotion Mods',
 ];
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, onRules }) => {
@@ -154,27 +155,30 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, 
           }}
         >
           {/* Crown icon */}
-          <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-kingdom-gold to-kingdom-goldDark flex items-center justify-center shadow-regal-gold">
-              <img src="/pieces/regent.png" alt="Crown" className="w-14 h-14 object-cover object-top rounded-full" />
+          <div className="flex justify-center mb-2 sm:mb-4">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-kingdom-gold to-kingdom-goldDark flex items-center justify-center shadow-regal-gold">
+              <img src="/pieces/regent.png" alt="Crown" className="w-10 h-10 sm:w-14 sm:h-14 object-cover object-top rounded-full" />
             </div>
           </div>
-          <h1 className="font-fantasy text-6xl md:text-8xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-kingdom-goldLight via-kingdom-gold to-kingdom-goldDark drop-shadow-[0_2px_30px_rgba(245,158,11,0.5)]">
+          <h1 className="font-fantasy text-4xl sm:text-6xl md:text-8xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-kingdom-goldLight via-kingdom-gold to-kingdom-goldDark drop-shadow-[0_2px_30px_rgba(245,158,11,0.5)]">
             CROWNFALL
           </h1>
-          <p className="font-fantasy text-lg md:text-2xl tracking-[0.3em] text-kingdom-silver mt-1 uppercase">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-1 sm:mt-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] sm:text-xs font-semibold tracking-widest uppercase">
+            ⚡ Chess with Mods
+          </div>
+          <p className="font-fantasy text-sm sm:text-lg md:text-2xl tracking-[0.25em] text-kingdom-silver mt-1 uppercase">
             The Last Kingdom
           </p>
-          <div className="mt-4 h-px w-64 mx-auto bg-gradient-to-r from-transparent via-kingdom-gold to-transparent opacity-60" />
-          <p className="mt-4 text-slate-400 text-sm md:text-base italic max-w-md mx-auto leading-relaxed">
-            "Easy to understand. Difficult to master.<br />
-            Never surrender until the Regent falls."
+          <div className="mt-3 sm:mt-4 h-px w-48 sm:w-64 mx-auto bg-gradient-to-r from-transparent via-kingdom-gold to-transparent opacity-60" />
+          <p className="mt-3 text-slate-400 text-xs sm:text-sm md:text-base italic max-w-md mx-auto leading-relaxed px-4">
+            "Classic chess warfare empowered by tactical piece mods.<br className="hidden sm:inline" />
+            Check, Checkmate, and Special Abilities."
           </p>
         </div>
 
         {/* Piece showcase carousel */}
         <div
-          className="flex gap-3 mt-2"
+          className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-1 sm:mt-2 px-2 max-w-lg"
           style={{
             opacity: buttonsVisible ? 1 : 0,
             transition: 'opacity 0.6s ease 0.4s',
@@ -187,7 +191,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, 
               className="relative group flex flex-col items-center"
             >
               <div
-                className={`w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                className={`w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
                   activePiece === i
                     ? 'border-kingdom-gold shadow-regal-gold scale-110'
                     : 'border-white/10 opacity-60 hover:opacity-90 hover:border-white/30'
@@ -201,17 +205,22 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, 
                 />
               </div>
               {activePiece === i && (
-                <div className="absolute -bottom-6 text-center w-24 left-1/2 -translate-x-1/2">
-                  <p className="text-kingdom-gold font-fantasy text-xs font-bold tracking-wider">{PIECE_LABELS[i]}</p>
+                <div className="absolute -bottom-6 text-center w-28 left-1/2 -translate-x-1/2 pointer-events-none">
+                  <p className="text-kingdom-gold font-fantasy text-[10px] sm:text-xs font-bold tracking-wider whitespace-nowrap">
+                    {PIECE_LABELS[i]}
+                  </p>
+                  <span className="text-[9px] text-amber-200/70 block uppercase font-mono">
+                    {PIECE_MOD_ARCHETYPES[i]}
+                  </span>
                 </div>
               )}
             </button>
           ))}
         </div>
         {/* Piece subtitle */}
-        <div className="h-5 mt-2">
+        <div className="h-6 mt-6 sm:mt-5 px-4 text-center">
           <p
-            className="text-center text-slate-400 text-xs italic"
+            className="text-slate-300 text-xs sm:text-sm font-medium tracking-wide"
             style={{ opacity: buttonsVisible ? 1 : 0, transition: 'opacity 0.6s' }}
           >
             {PIECE_SUBTITLES[activePiece]}

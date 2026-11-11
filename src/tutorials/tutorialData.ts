@@ -19,11 +19,11 @@ export const TUTORIAL_SCENARIOS: TutorialScenario[] = [
   {
     id: 'regent',
     stepNumber: 1,
-    title: 'The Regent — Commander of the Realm',
-    subtitle: 'The Kingdom loses its command structure when its Regent is captured.',
+    title: 'The Regent (King Mod) — Royal Commander',
+    subtitle: 'The sovereign heart of your army, subject to Check and Checkmate.',
     lore: 'The Regent marches with sovereign authority. Step by step, the ruler dictates the tempo of war.',
-    instructions: 'The Regent moves exactly 1 square in any of the 8 directions. Strike the vulnerable Silver Soldier at (3, 4) to eliminate the threat.',
-    mechanicNote: 'No chess-style check or checkmate exists in CROWNFALL. The Regent can remain under attack without being forced to move.',
+    instructions: 'The Regent moves exactly 1 square in any of the 8 directions (like a King). Strike the vulnerable Silver Soldier at (3, 4) to eliminate the threat.',
+    mechanicNote: 'Under Chess rules, your Regent is the King: it cannot move into check, and must escape check when attacked.',
     hint: 'Select the Gold Regent at (4, 4) and click the Silver Soldier at (3, 4) to capture it.',
     createScenarioState: () => {
       const goldRegent = createPiece('regent', 'gold', { row: 4, col: 4 });

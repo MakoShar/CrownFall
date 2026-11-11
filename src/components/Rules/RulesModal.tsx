@@ -17,11 +17,16 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               <Crown className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-fantasy font-bold text-amber-100">
-                Codex of Crownfall — Comprehensive Rules & Disciplines
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-fantasy font-bold text-amber-100">
+                  Codex of Crownfall
+                </h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                  ⚡ Chess with Mods
+                </span>
+              </div>
               <p className="text-xs text-slate-400">
-                Easy to understand. Difficult to master. Never surrender until the Regent falls.
+                Classical Chess fundamentals elevated with tactical piece abilities and abilities.
               </p>
             </div>
           </div>
@@ -38,10 +43,10 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
           {/* Section: Philosophy */}
           <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
             <h3 className="text-sm font-fantasy font-bold text-kingdom-gold uppercase tracking-wider">
-              1. Fundamental Principles
+              1. The "Chess with Mods" Philosophy
             </h3>
             <p className="text-slate-300">
-              CROWNFALL is an original turn-based strategy game. Unlike chess, there is <strong>no mandatory check or checkmate</strong>. A player is not forced to flee when under attack. The kingdom falls only when its Regent is captured, subject to the sacred <strong>Mutual Regent Capture</strong> rule.
+              <strong>CROWNFALL</strong> plays with all standard chess principles: <strong>Check, Checkmate, and Stalemate</strong> are fully active. Your Regent is the royal King — you can never leave or move your Regent into check. However, every unit is supercharged with tactical <strong>"Mods"</strong> (special abilities) that expand strategic depth without sacrificing familiar chess intuition.
             </p>
           </div>
 
@@ -59,14 +64,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <PieceIcon type="regent" owner="gold" size={38} />
                   </div>
                   <div>
-                    <div className="font-bold text-amber-200 text-sm">Regent (Commander)</div>
-                    <div className="text-[11px] text-slate-400">The crown of the army</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Regent</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300">KING MOD</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">The Royal Sovereign</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square in any of the 8 directions.<br />
-                  • <strong>Capture:</strong> Captures normally. Cannot be converted by Oracle.<br />
-                  • <strong>Victory:</strong> Its capture ends the match unless counter-captured during Mutual Regent Response.
+                  • <strong>Movement:</strong> 1 square in any of the 8 directions (like a King).<br />
+                  • <strong>Check & Mate:</strong> Cannot move into check or remain in check. Checkmate ends the match immediately!<br />
+                  • <strong>Immunity:</strong> Cannot be converted by enemy Oracles.
                 </p>
               </div>
 
@@ -77,13 +85,16 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <PieceIcon type="champion" owner="gold" size={38} />
                   </div>
                   <div>
-                    <div className="font-bold text-amber-200 text-sm">Champion (Supreme Warrior)</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Champion</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300">QUEEN MOD</span>
+                    </div>
                     <div className="text-[11px] text-slate-400">Supreme battlefield dominance</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> Any number of squares horizontally, vertically, and diagonally (like a Queen).<br />
-                  • <strong>Divine Immunity:</strong> Cannot be converted by an Oracle. If an Oracle captures a Champion, Champion dies and Oracle survives.
+                  • <strong>Movement:</strong> Any number of squares in all 8 directions (like a Queen).<br />
+                  • <strong>Divine Immunity Mod:</strong> Cannot be converted by enemy Oracles. If attacked by an Oracle, the Oracle perishes!
                 </p>
               </div>
 
@@ -94,13 +105,16 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <PieceIcon type="rider" owner="gold" orientation="N" size={38} />
                   </div>
                   <div>
-                    <div className="font-bold text-amber-200 text-sm">Rider (Directional Warrior)</div>
-                    <div className="text-[11px] text-slate-400">Facing axis dictates movement</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Rider</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300">ROOK MOD</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">Directional Heavy Charge</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> Vertical axis (↕) moves vertically any distance. Horizontal axis (↔) moves horizontally any distance.<br />
-                  • <strong>Rotation:</strong> Click Rotate ↔ / Rotate ↕ to change axis (consumes the entire turn).<br />
+                  • <strong>Movement:</strong> Long-range straight slide along current axis (↕ vertical or ↔ horizontal).<br />
+                  • <strong>Axis Shift Mod:</strong> Use the <em>Rotate</em> ability to switch orientation (↕ ↔ ↔) at the cost of a turn.<br />
                   • <strong>Preservation:</strong> Retains facing axis if converted.
                 </p>
               </div>
@@ -112,14 +126,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <PieceIcon type="oracle" owner="gold" size={38} />
                   </div>
                   <div>
-                    <div className="font-bold text-amber-200 text-sm">Oracle (Divine Messenger)</div>
-                    <div className="text-[11px] text-slate-400">Allegiance transfer & sacrifice</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Oracle</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-indigo-500/20 text-indigo-300">BISHOP MOD</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">Sacrificial Conversion</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> Diagonally any distance.<br />
-                  • <strong>Divine Conversion:</strong> Oracle sacrifices itself to convert the captured enemy unit on its exact tile!<br />
-                  • <strong>Oracle vs Oracle:</strong> Mutual destruction — both perish!
+                  • <strong>Movement:</strong> Any number of squares along diagonals (like a Bishop).<br />
+                  • <strong>Divine Conversion Mod:</strong> Converts the target enemy unit to your side upon capture while sacrificing itself!<br />
+                  • <strong>Oracle vs Oracle:</strong> Both perish in mutual spiritual destruction.
                 </p>
               </div>
 
@@ -130,14 +147,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <PieceIcon type="bastion" owner="gold" isSiegeMode size={38} />
                   </div>
                   <div>
-                    <div className="font-bold text-amber-200 text-sm">Bastion (Siege Guardian)</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Bastion</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-yellow-500/20 text-yellow-300">CASTLE MOD</span>
+                    </div>
                     <div className="text-[11px] text-slate-400">Seismic BASH & Siege Mode</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square in 8 directions.<br />
-                  • <strong>BASH:</strong> Pushes adjacent enemy into random empty surrounding square. If surrounded, enemy is crushed!<br />
-                  • <strong>Siege Mode:</strong> Permanently unlocked at baseline. Gains Enhanced 2-Target BASH and Soldier Leap!
+                  • <strong>Movement:</strong> 1 square in all 8 directions.<br />
+                  • <strong>BASH Mod:</strong> Displaces an adjacent enemy into a random open square. If surrounded, the target is crushed!<br />
+                  • <strong>Siege Mode:</strong> Unlocks permanently at the enemy baseline: gains 2-target BASH and Soldier Leap!
                 </p>
               </div>
 
@@ -148,14 +168,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <PieceIcon type="soldier" owner="gold" size={38} />
                   </div>
                   <div>
-                    <div className="font-bold text-amber-200 text-sm">Soldier (Infantry)</div>
-                    <div className="text-[11px] text-slate-400">Forward & sideways movement & promotion</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Soldier</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300">PAWN MOD</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">Forward/Sideways Infantry</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square forward or sideways (5 directions: straight forward, forward diagonals, sideways). Cannot move backward.<br />
-                  • <strong>Friendly Elimination:</strong> Can sacrifice itself to clear paths.<br />
-                  • <strong>Promotion:</strong> Promotes at baseline to Champion, Rider, or Bastion.
+                  • <strong>Movement:</strong> 1 square forward or sideways (5 directions: straight ahead, forward diagonals, left/right). No backward steps.<br />
+                  • <strong>Sacrifice Mod:</strong> Can voluntarily eliminate itself to unblock tactical lanes.<br />
+                  • <strong>Baseline Promotion Mod:</strong> Promotes at the enemy baseline into Champion, Rider, or Bastion!
                 </p>
               </div>
             </div>
