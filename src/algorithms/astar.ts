@@ -1,5 +1,13 @@
 import { Position, Piece, isSamePosition, positionKey } from '../engine/pieces';
-import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, getSoldierDirections } from '../config/boardConfig';
+import {
+  BoardConfig,
+  DEFAULT_BOARD_CONFIG,
+  ALL_8_DIRECTIONS,
+  ORTHOGONAL_DIRECTIONS,
+  DIAGONAL_DIRECTIONS,
+  KNIGHT_DIRECTIONS,
+  getPawnAttackDirections,
+} from '../config/boardConfig';
 import { isWithinBoard, getPieceAt } from '../engine/board';
 
 export interface AStarNode {
@@ -133,12 +141,22 @@ function getPieceNeighbors(
 
   switch (piece.type) {
     case 'rider': {
-      // Moves along current facing axis
-      const dirs = (piece.orientation === 'N' || piece.orientation === 'S')
-        ? [{ dRow: -1, dCol: 0 }, { dRow: 1, dCol: 0 }]
-        : [{ dRow: 0, dCol: -1 }, { dRow: 0, dCol: 1 }];
+      // Knight: 8 L-shape jumps
+      for (const d of KNIGHT_DIRECTIONS) {
+        const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
+        if (isWithinBoard(nextPos, config)) {
+          const occ = getPieceAt(pieces, nextPos);
+          if (!occ || occ.owner !== piece.owner) {
+            neighbors.push(nextPos);
+          }
+        }
+      }
+      break;
+    }
 
-      for (const d of dirs) {
+    case 'bastion': {
+      // Rook: 4 orthogonal directions
+      for (const d of ORTHOGONAL_DIRECTIONS) {
         const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
         if (isWithinBoard(nextPos, config)) {
           const occ = getPieceAt(pieces, nextPos);
@@ -151,12 +169,26 @@ function getPieceNeighbors(
     }
 
     case 'oracle': {
-      // Diagonals
+      // Bishop: 4 diagonal directions
+      for (const d of DIAGONAL_DIRECTIONS) {
+        const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
+        if (isWithinBoard(nextPos, config)) {
+          const occ = getPieceAt(pieces, nextPos);
+          if (!occ || occ.owner !== piece.owner) {
+            neighbors.push(nextPos);
+          }
+        }
+      }
+      break;
+    }
+
+    case 'soldier': {
+      // Pawn: Forward straight or forward diagonals
+      const fwd = piece.owner === 'gold' ? -1 : 1;
       const dirs = [
-        { dRow: -1, dCol: -1 },
-        { dRow: -1, dCol: 1 },
-        { dRow: 1, dCol: -1 },
-        { dRow: 1, dCol: 1 },
+        { dRow: fwd, dCol: 0 },
+        { dRow: fwd, dCol: -1 },
+        { dRow: fwd, dCol: 1 },
       ];
       for (const d of dirs) {
         const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
@@ -170,23 +202,8 @@ function getPieceNeighbors(
       break;
     }
 
-    case 'soldier': {
-      // Forward or sideways only (no backward)
-      const dirs = getSoldierDirections(piece.owner);
-      for (const d of dirs) {
-        const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
-        if (isWithinBoard(nextPos, config)) {
-          const occ = getPieceAt(pieces, nextPos);
-          if (!occ || occ.owner !== piece.owner) {
-            neighbors.push(nextPos);
-          }
-        }
-      }
-      break;
-    }
-
     default: {
-      // 8 directions (Soldier, Regent, Bastion, Champion step)
+      // King / Queen: 8 directions
       for (const d of ALL_8_DIRECTIONS) {
         const nextPos = { row: currentPos.row + d.dRow, col: currentPos.col + d.dCol };
         if (isWithinBoard(nextPos, config)) {

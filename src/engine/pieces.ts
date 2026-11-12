@@ -2,11 +2,27 @@ import { Direction } from '../config/boardConfig';
 
 export type { Direction };
 export type PieceType = 'regent' | 'champion' | 'rider' | 'oracle' | 'bastion' | 'soldier';
-export type PlayerColor = 'gold' | 'silver';
+export type PlayerColor = 'white' | 'blue' | 'gold' | 'silver';
+
+export function isWhite(color: PlayerColor): boolean {
+  return color === 'white' || color === 'gold';
+}
+
+export function isBlue(color: PlayerColor): boolean {
+  return color === 'blue' || color === 'silver';
+}
 
 export interface Position {
   row: number;
   col: number;
+}
+
+export interface PieceSpecialAbilityState {
+  hasUsedSkipTurn?: boolean;
+  skipTurnCooldownUntilTurn?: number; // Horse cannot move on the next turn after using skip
+  hasUsedTransform?: boolean;         // Bishop can only transform once
+  originalType?: PieceType;
+  [key: string]: unknown;
 }
 
 export interface Piece {
@@ -18,7 +34,7 @@ export interface Piece {
   orientation?: Direction;             // Rider: 'N' | 'S' | 'E' | 'W'
   isSiegeMode?: boolean;               // Bastion: true once baseline reached
   promotionEligible?: boolean;         // Soldier: reached baseline
-  specialAbilityState?: Record<string, unknown>;
+  specialAbilityState?: PieceSpecialAbilityState;
 }
 
 export function isSamePosition(a: Position, b: Position): boolean {
@@ -71,7 +87,7 @@ export function createPiece(
     owner,
     position: clonePosition(position),
     originalPosition: options?.originalPosition ? clonePosition(options.originalPosition) : clonePosition(position),
-    orientation: options?.orientation ?? (type === 'rider' ? (owner === 'gold' ? 'N' : 'S') : undefined),
+    orientation: options?.orientation ?? (type === 'rider' ? (isWhite(owner) ? 'N' : 'S') : undefined),
     isSiegeMode: options?.isSiegeMode ?? false,
     promotionEligible: options?.promotionEligible ?? false,
     specialAbilityState: {},

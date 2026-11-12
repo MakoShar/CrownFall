@@ -64,38 +64,38 @@ export const DifficultySelectScreen: React.FC<DifficultySelectScreenProps> = ({
 
   return (
     <div
-      className="min-h-screen bg-kingdom-obsidian flex flex-col items-center justify-center p-6"
+      className="min-h-screen bg-kingdom-obsidian flex flex-col items-center justify-center p-4 sm:p-6"
       style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(220,38,38,0.07) 0%, #090d16 60%)' }}
     >
       {/* Back */}
-      <div className="w-full max-w-3xl mb-8">
+      <div className="w-full max-w-3xl mb-4 sm:mb-8">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-semibold transition-colors"
+          className="flex items-center gap-2 text-slate-400 hover:text-white text-xs sm:text-sm font-semibold transition-colors"
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
       </div>
 
       {/* Header */}
-      <div className="text-center mb-10">
-        <h2 className="font-fantasy text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-kingdom-silverLight to-kingdom-silver tracking-widest">
+      <div className="text-center mb-6 sm:mb-10">
+        <h2 className="font-fantasy text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-kingdom-silverLight to-kingdom-silver tracking-widest">
           {isSpectate ? 'AI BATTLE TIER' : 'CHOOSE YOUR FOE'}
         </h2>
-        <p className="text-slate-500 mt-2 text-sm tracking-widest uppercase">
+        <p className="text-slate-500 mt-2 text-xs sm:text-sm tracking-widest uppercase">
           {isSpectate ? 'Select the AI difficulty tier for spectator mode' : 'How fierce is the enemy commander?'}
         </p>
       </div>
 
       {/* Difficulty cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full max-w-3xl">
         {DIFFICULTY_CONFIG.map((diff) => {
           const preset = DIFFICULTY_PRESETS[diff.id];
           return (
             <button
               key={diff.id}
               onClick={() => onSelectDifficulty(diff.id)}
-              className={`group relative flex flex-col items-center text-center p-8 rounded-2xl bg-gradient-to-br ${diff.color} border ${diff.border} ${diff.glow} transition-all duration-300 hover:-translate-y-1 active:scale-95 cursor-pointer`}
+              className={`group relative flex flex-col items-center text-center p-5 sm:p-8 rounded-2xl bg-gradient-to-br ${diff.color} border ${diff.border} ${diff.glow} transition-all duration-300 hover:-translate-y-1 active:scale-95 cursor-pointer`}
             >
               {/* Piece image */}
               <div className="w-20 h-20 rounded-xl overflow-hidden mb-4 border border-white/10 bg-black/20">

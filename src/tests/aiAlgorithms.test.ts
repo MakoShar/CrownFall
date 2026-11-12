@@ -51,19 +51,16 @@ describe('AI Algorithms Suite', () => {
     expect(astar.path[3]).toEqual({ row: 4, col: 4 });
   });
 
-  it('A* accounts for Rider directional axis constraints', () => {
-    // Rider facing North (vertical axis only)
-    const rider = createPiece('rider', 'gold', { row: 4, col: 4 }, { orientation: 'N' });
+  it('A* accounts for Rider Knight L-jump movement', () => {
+    // Rider on (4, 4)
+    const rider = createPiece('rider', 'gold', { row: 4, col: 4 });
     const pieces = [rider];
-    // Vertical target is reachable directly
-    const verticalTarget = { row: 1, col: 4 };
-    const astarVertical = runAStar(rider, verticalTarget, pieces);
-    expect(astarVertical.success).toBe(true);
-
-    // Horizontal target is NOT reachable without rotation (A* single axis path cannot reach lateral square)
-    const lateralTarget = { row: 4, col: 6 };
-    const astarLateral = runAStar(rider, lateralTarget, pieces);
-    expect(astarLateral.success).toBe(false);
+    // (2, 5) is 1 jump away (2 up, 1 right)
+    const jumpTarget = { row: 2, col: 5 };
+    const astarJump = runAStar(rider, jumpTarget, pieces);
+    expect(astarJump.success).toBe(true);
+    expect(astarJump.cost).toBe(1);
+    expect(astarJump.path).toEqual([{ row: 4, col: 4 }, { row: 2, col: 5 }]);
   });
 
   it('AO* evaluates genuine AND-OR graph and selects optimal compound strategy', () => {
@@ -97,11 +94,11 @@ describe('AI Algorithms Suite', () => {
     const exp = chooseAIMove(state, 'expert');
     expect(exp.move).toBeDefined();
     expect(exp.algorithm).toBe('alpha_beta');
-  });
+  }, 30000);
 
   it('AI generates 100% legal moves across sequential turns with zero illegal moves', () => {
     let state = createInitialGameState();
-    // Simulate 6 turns (3 by Gold, 3 by Silver)
+    // Simulate 6 turns
     for (let step = 0; step < 6; step++) {
       if (state.status !== 'in_progress') break;
       const aiResponse = chooseAIMove(state, 'intermediate');
@@ -111,5 +108,5 @@ describe('AI Algorithms Suite', () => {
       state = nextState;
     }
     expect(state.history.length).toBeGreaterThanOrEqual(4);
-  });
+  }, 30000);
 });

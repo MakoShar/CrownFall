@@ -1,5 +1,5 @@
 import { BoardConfig, DEFAULT_BOARD_CONFIG } from '../config/boardConfig';
-import { Piece, Position, isSamePosition, PlayerColor } from './pieces';
+import { Piece, Position, isSamePosition, PlayerColor, isWhite } from './pieces';
 
 export function isWithinBoard(pos: Position, config: BoardConfig = DEFAULT_BOARD_CONFIG): boolean {
   return pos.row >= 0 && pos.row < config.rows && pos.col >= 0 && pos.col < config.cols;
@@ -18,11 +18,11 @@ export function isSquareEmpty(pieces: Piece[], pos: Position): boolean {
 }
 
 export function isOpponentPiece(piece: Piece, targetPiece: Piece): boolean {
-  return piece.owner !== targetPiece.owner;
+  return isWhite(piece.owner) !== isWhite(targetPiece.owner);
 }
 
 export function isOpponentBaseline(pos: Position, owner: PlayerColor, config: BoardConfig = DEFAULT_BOARD_CONFIG): boolean {
-  const targetRow = owner === 'gold' ? config.goldBaselineRow : config.silverBaselineRow;
+  const targetRow = isWhite(owner) ? config.goldBaselineRow : config.silverBaselineRow;
   return pos.row === targetRow;
 }
 
