@@ -88,58 +88,6 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
           pointerEvents: 'none',
         }}
       />
-
-      {/* Rider direction compass badge */}
-      {type === 'rider' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '2px',
-            right: '2px',
-            minWidth: '16px',
-            height: '16px',
-            padding: '0 2px',
-            borderRadius: '8px',
-            background: isGold ? 'rgba(245,158,11,0.95)' : 'rgba(56,189,248,0.95)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '11px',
-            lineHeight: 1,
-            color: '#000',
-            fontWeight: '900',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.7)',
-            zIndex: 5,
-          }}
-          title={orientation === 'N' || orientation === 'S' ? 'Vertical Axis (↕)' : 'Horizontal Axis (↔)'}
-        >
-          {ORIENTATION_ARROWS[orientation]}
-        </div>
-      )}
-
-      {/* Siege mode flame badge */}
-      {isSiegeMode && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '2px',
-            left: '2px',
-            width: '16px',
-            height: '16px',
-            borderRadius: '50%',
-            background: 'rgba(220,38,38,0.95)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-            lineHeight: 1,
-            boxShadow: '0 0 8px rgba(220,38,38,0.8)',
-            zIndex: 5,
-          }}
-        >
-          🔥
-        </div>
-      )}
     </div>
   );
 };

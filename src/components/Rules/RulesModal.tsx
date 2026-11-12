@@ -1,6 +1,6 @@
 import React from 'react';
 import { PieceIcon } from '../Pieces/PieceIcon';
-import { X, Shield, Swords, Compass, Sparkles, Crown, Users } from 'lucide-react';
+import { X, Crown, Shield, Swords, Sparkles, Zap, User } from 'lucide-react';
 
 interface RulesModalProps {
   onClose: () => void;
@@ -22,17 +22,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                   Codex of Crownfall
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                  ⚡ Chess with Mods
+                  Standard Chess Rules
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Classical Chess fundamentals elevated with tactical piece abilities and abilities.
+                Classical Chess fundamentals. Pure piece movements without special abilities.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -43,17 +43,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
           {/* Section: Philosophy */}
           <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
             <h3 className="text-sm font-fantasy font-bold text-kingdom-gold uppercase tracking-wider">
-              1. The "Chess with Mods" Philosophy
+              1. Standard Chess Foundation
             </h3>
             <p className="text-slate-300">
-              <strong>CROWNFALL</strong> plays with all standard chess principles: <strong>Check, Checkmate, and Stalemate</strong> are fully active. Your Regent is the royal King — you can never leave or move your Regent into check. However, every unit is supercharged with tactical <strong>"Mods"</strong> (special abilities) that expand strategic depth without sacrificing familiar chess intuition.
+              <strong>CROWNFALL</strong> runs on complete standard chess mechanics: <strong>Check, Checkmate, and Stalemate</strong> govern victory and defeat. Every unit moves and captures identically to traditional chess pieces. Special ability mods are currently disabled.
             </p>
           </div>
 
           {/* Section: The Six Pieces */}
           <div className="space-y-4">
             <h3 className="text-sm font-fantasy font-bold text-kingdom-gold uppercase tracking-wider">
-              2. Unit Roster & Special Disciplines
+              2. Unit Roster & Movement
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -66,119 +66,115 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-amber-200 text-sm">Regent</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300">KING MOD</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300">KING</span>
                     </div>
                     <div className="text-[11px] text-slate-400">The Royal Sovereign</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square in any of the 8 directions (like a King).<br />
-                  • <strong>Check & Mate:</strong> Cannot move into check or remain in check. Checkmate ends the match immediately!<br />
-                  • <strong>Immunity:</strong> Cannot be converted by enemy Oracles.
+                  • <strong>Movement:</strong> 1 square in any of the 8 directions.<br />
+                  • <strong>Check & Mate:</strong> Cannot step into or remain in check. Checkmate ends the match immediately!
                 </p>
               </div>
 
               {/* Champion */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-amber-500/40">
+                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-purple-500/40">
                     <PieceIcon type="champion" owner="gold" size={38} />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-amber-200 text-sm">Champion</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300">QUEEN MOD</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300">QUEEN</span>
                     </div>
-                    <div className="text-[11px] text-slate-400">Supreme battlefield dominance</div>
+                    <div className="text-[11px] text-slate-400">Supreme Battlefield Dominance</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> Any number of squares in all 8 directions (like a Queen).<br />
-                  • <strong>Divine Immunity Mod:</strong> Cannot be converted by enemy Oracles. If attacked by an Oracle, the Oracle perishes!
-                </p>
-              </div>
-
-              {/* Rider */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-amber-500/40">
-                    <PieceIcon type="rider" owner="gold" orientation="N" size={38} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-amber-200 text-sm">Rider</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300">ROOK MOD</span>
-                    </div>
-                    <div className="text-[11px] text-slate-400">Directional Heavy Charge</div>
-                  </div>
-                </div>
-                <p className="text-slate-300">
-                  • <strong>Movement:</strong> Long-range straight slide along current axis (↕ vertical or ↔ horizontal).<br />
-                  • <strong>Axis Shift Mod:</strong> Use the <em>Rotate</em> ability to switch orientation (↕ ↔ ↔) at the cost of a turn.<br />
-                  • <strong>Preservation:</strong> Retains facing axis if converted.
-                </p>
-              </div>
-
-              {/* Oracle */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-amber-500/40">
-                    <PieceIcon type="oracle" owner="gold" size={38} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-amber-200 text-sm">Oracle</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-indigo-500/20 text-indigo-300">BISHOP MOD</span>
-                    </div>
-                    <div className="text-[11px] text-slate-400">Sacrificial Conversion</div>
-                  </div>
-                </div>
-                <p className="text-slate-300">
-                  • <strong>Movement:</strong> Any number of squares along diagonals (like a Bishop).<br />
-                  • <strong>Divine Conversion Mod:</strong> Converts the target enemy unit to your side upon capture while sacrificing itself!<br />
-                  • <strong>Oracle vs Oracle:</strong> Both perish in mutual spiritual destruction.
+                  • <strong>Movement:</strong> Any number of squares in all 8 directions (orthogonal and diagonal).<br />
+                  • <strong>Capture:</strong> Captures any opposing piece along its unobstructed path.
                 </p>
               </div>
 
               {/* Bastion */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-amber-500/40">
-                    <PieceIcon type="bastion" owner="gold" isSiegeMode size={38} />
+                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-orange-500/40">
+                    <PieceIcon type="bastion" owner="gold" size={38} />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-amber-200 text-sm">Bastion</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-yellow-500/20 text-yellow-300">CASTLE MOD</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-orange-500/20 text-orange-300">ROOK</span>
                     </div>
-                    <div className="text-[11px] text-slate-400">Seismic BASH & Siege Mode</div>
+                    <div className="text-[11px] text-slate-400">Heavy Castle Rampart</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square in all 8 directions.<br />
-                  • <strong>BASH Mod:</strong> Displaces an adjacent enemy into a random open square. If surrounded, the target is crushed!<br />
-                  • <strong>Siege Mode:</strong> Unlocks permanently at the enemy baseline: gains 2-target BASH and Soldier Leap!
+                  • <strong>Movement:</strong> Any number of squares horizontally or vertically along ranks and files.<br />
+                  • <strong>Capture:</strong> Linear orthogonal capture.
+                </p>
+              </div>
+
+              {/* Oracle */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-indigo-500/40">
+                    <PieceIcon type="oracle" owner="gold" size={38} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Oracle</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-indigo-500/20 text-indigo-300">BISHOP</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">Sacred Diagonal Seer</div>
+                  </div>
+                </div>
+                <p className="text-slate-300">
+                  • <strong>Movement:</strong> Any number of squares along diagonals.<br />
+                  • <strong>Capture:</strong> Diagonal capture like a standard chess Bishop.
+                </p>
+              </div>
+
+              {/* Rider */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-sky-500/40">
+                    <PieceIcon type="rider" owner="gold" size={38} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-amber-200 text-sm">Rider</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300">KNIGHT</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">Mounted Cavalier</div>
+                  </div>
+                </div>
+                <p className="text-slate-300">
+                  • <strong>Movement:</strong> Jumps in an L-shape (2 squares in one direction, 1 square perpendicular).<br />
+                  • <strong>Leap:</strong> Can leap over other pieces on the board.
                 </p>
               </div>
 
               {/* Soldier */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-amber-500/40">
+                  <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-emerald-500/40">
                     <PieceIcon type="soldier" owner="gold" size={38} />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-amber-200 text-sm">Soldier</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300">PAWN MOD</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300">PAWN</span>
                     </div>
-                    <div className="text-[11px] text-slate-400">Forward/Sideways Infantry</div>
+                    <div className="text-[11px] text-slate-400">Infantry Vanguard</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square forward or sideways (5 directions: straight ahead, forward diagonals, left/right). No backward steps.<br />
-                  • <strong>Sacrifice Mod:</strong> Can voluntarily eliminate itself to unblock tactical lanes.<br />
-                  • <strong>Baseline Promotion Mod:</strong> Promotes at the enemy baseline into Champion, Rider, or Bastion!
+                  • <strong>Movement:</strong> Moves 1 square straight forward (or 2 squares forward on its first move).<br />
+                  • <strong>Capture:</strong> Captures 1 square diagonally forward.<br />
+                  • <strong>Promotion:</strong> Reaching the 8th rank promotes into Queen (Champion), Rook (Bastion), Bishop (Oracle), or Knight (Rider).
                 </p>
               </div>
             </div>
@@ -194,8 +190,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             </p>
             <ol className="list-decimal pl-5 space-y-1 text-slate-300">
               <li><strong>Check:</strong> When a Regent is threatened by any enemy unit, it is in CHECK. The commander must escape on their turn.</li>
-              <li><strong>Mandatory Defense:</strong> Any move that leaves or places your own Regent in check is strictly illegal (pinned pieces cannot move off their pin line, and the Regent cannot enter attacked squares).</li>
-              <li><strong>Escaping Check:</strong> You must escape check by moving the Regent to safety, capturing the checking attacker, or interposing a friendly piece to block the attack ray.</li>
+              <li><strong>Mandatory Defense:</strong> Any move that leaves or places your own Regent in check is strictly illegal.</li>
+              <li><strong>Escaping Check:</strong> You must escape check by moving the Regent to safety, capturing the checking attacker, or blocking the line of attack.</li>
               <li><strong>Checkmate:</strong> If your Regent is in check and no legal move can escape: CHECKMATE! The attacking Kingdom wins immediately.</li>
               <li><strong>Stalemate:</strong> If a player has no legal moves but is NOT in check, the match concludes in a DRAW.</li>
             </ol>
@@ -205,4 +201,3 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
     </div>
   );
 };
-

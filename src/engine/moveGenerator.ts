@@ -1,9 +1,13 @@
-import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, DIAGONAL_DIRECTIONS, getSoldierDirections } from '../config/boardConfig';
-import { Piece, Position, PlayerColor, PieceType, isSamePosition, positionKey, clonePiece, clonePosition } from './pieces';
+import {
+  BoardConfig,
+  DEFAULT_BOARD_CONFIG,
+  ALL_8_DIRECTIONS,
+  ORTHOGONAL_DIRECTIONS,
+  DIAGONAL_DIRECTIONS,
+  KNIGHT_DIRECTIONS,
+} from '../config/boardConfig';
+import { Piece, Position, PlayerColor, PieceType, clonePiece, clonePosition } from './pieces';
 import { isWithinBoard, getPieceAt, isOpponentBaseline } from './board';
-import { getLegalBashTargets, getConsecutiveSiegeBashTargets, getSoldierLeapMoves } from './bastionAbilities';
-import { getLegalRotations } from './riderOrientation';
-import { isConvertibleByOracle } from './conversionHandler';
 import { VALID_PROMOTION_CHOICES } from './promotionHandler';
 import { isRegentThreatened } from './attackDetection';
 
@@ -20,10 +24,11 @@ export interface Move {
   from: Position;
   to?: Position;
   targetPieceId?: string;
-  secondTargetPieceId?: string;
+  promotionChoice?: PieceType;
+  // Retained for backward type compatibility
   newOrientation?: 'N' | 'S' | 'E' | 'W';
   oracleAction?: 'capture' | 'convert';
-  promotionChoice?: PieceType;
+  secondTargetPieceId?: string;
   isSoldierLeap?: boolean;
   leapedPieceIds?: string[];
 }
@@ -32,16 +37,14 @@ export function generateLegalMoves(
   pieces: Piece[],
   activePlayer: PlayerColor,
   options?: {
-    isMutualResponse?: boolean; // When true, only moves that capture opposing Regent are legal
-    expandChoices?: boolean;    // When true, enumerate oracle conversion and promotion choices
+    isMutualResponse?: boolean;
+    expandChoices?: boolean;
     config?: BoardConfig;
   }
 ): Move[] {
   const config = options?.config ?? DEFAULT_BOARD_CONFIG;
-  const isMutual = options?.isMutualResponse ?? false;
   const expandChoices = options?.expandChoices ?? true;
 
-  const opponentRegent = pieces.find((p) => p.owner !== activePlayer && p.type === 'regent');
   const playerPieces = pieces.filter((p) => p.owner === activePlayer);
   const moves: Move[] = [];
 
@@ -52,57 +55,23 @@ export function generateLegalMoves(
     while (isWithinBoard({ row: r, col: c }, config)) {
       const occupant = getPieceAt(pieces, { row: r, col: c });
       if (!occupant) {
-        if (!isMutual) {
+        moves.push({
+          type: 'move',
+          pieceId: piece.id,
+          from: piece.position,
+          to: { row: r, col: c },
+        });
+      } else {
+        if (occupant.owner !== activePlayer) {
           moves.push({
             type: 'move',
             pieceId: piece.id,
             from: piece.position,
             to: { row: r, col: c },
+            targetPieceId: occupant.id,
           });
         }
-      } else {
-        if (occupant.owner !== activePlayer) {
-          // Can capture
-          if (isMutual) {
-            if (occupant.type === 'regent') {
-              moves.push({
-                type: 'move',
-                pieceId: piece.id,
-                from: piece.position,
-                to: { row: r, col: c },
-                targetPieceId: occupant.id,
-              });
-            }
-          } else {
-            if (piece.type === 'oracle' && isConvertibleByOracle(occupant) && expandChoices) {
-              moves.push({
-                type: 'move',
-                pieceId: piece.id,
-                from: piece.position,
-                to: { row: r, col: c },
-                targetPieceId: occupant.id,
-                oracleAction: 'capture',
-              });
-              moves.push({
-                type: 'move',
-                pieceId: piece.id,
-                from: piece.position,
-                to: { row: r, col: c },
-                targetPieceId: occupant.id,
-                oracleAction: 'convert',
-              });
-            } else {
-              moves.push({
-                type: 'move',
-                pieceId: piece.id,
-                from: piece.position,
-                to: { row: r, col: c },
-                targetPieceId: occupant.id,
-              });
-            }
-          }
-        }
-        break; // Blocked by piece
+        break; // Blocked
       }
       r += dRow;
       c += dCol;
@@ -112,29 +81,26 @@ export function generateLegalMoves(
   for (const piece of playerPieces) {
     switch (piece.type) {
       case 'regent': {
+        // King: 1 square in all 8 directions
         for (const dir of ALL_8_DIRECTIONS) {
           const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
           if (isWithinBoard(target, config)) {
             const occupant = getPieceAt(pieces, target);
             if (!occupant) {
-              if (!isMutual) {
-                moves.push({
-                  type: 'move',
-                  pieceId: piece.id,
-                  from: piece.position,
-                  to: target,
-                });
-              }
+              moves.push({
+                type: 'move',
+                pieceId: piece.id,
+                from: piece.position,
+                to: target,
+              });
             } else if (occupant.owner !== activePlayer) {
-              if (!isMutual || occupant.type === 'regent') {
-                moves.push({
-                  type: 'move',
-                  pieceId: piece.id,
-                  from: piece.position,
-                  to: target,
-                  targetPieceId: occupant.id,
-                });
-              }
+              moves.push({
+                type: 'move',
+                pieceId: piece.id,
+                from: piece.position,
+                to: target,
+                targetPieceId: occupant.id,
+              });
             }
           }
         }
@@ -142,13 +108,23 @@ export function generateLegalMoves(
       }
 
       case 'champion': {
+        // Queen: 8 rays (orthogonal & diagonal)
         for (const dir of ALL_8_DIRECTIONS) {
           addRayMoves(piece, dir.dRow, dir.dCol);
         }
         break;
       }
 
+      case 'bastion': {
+        // Rook: 4 orthogonal rays
+        for (const dir of ORTHOGONAL_DIRECTIONS) {
+          addRayMoves(piece, dir.dRow, dir.dCol);
+        }
+        break;
+      }
+
       case 'oracle': {
+        // Bishop: 4 diagonal rays
         for (const dir of DIAGONAL_DIRECTIONS) {
           addRayMoves(piece, dir.dRow, dir.dCol);
         }
@@ -156,101 +132,25 @@ export function generateLegalMoves(
       }
 
       case 'rider': {
-        // Linear movement along facing direction
-        if (piece.orientation === 'N' || piece.orientation === 'S') {
-          addRayMoves(piece, -1, 0);
-          addRayMoves(piece, 1, 0);
-        } else if (piece.orientation === 'E' || piece.orientation === 'W') {
-          addRayMoves(piece, 0, -1);
-          addRayMoves(piece, 0, 1);
-        }
-
-        // Rotations consume turn (not allowed in mutual regent response)
-        if (!isMutual) {
-          const rotations = getLegalRotations(piece);
-          for (const newOrientation of rotations) {
-            moves.push({
-              type: 'rider_rotate',
-              pieceId: piece.id,
-              from: piece.position,
-              newOrientation,
-            });
-          }
-        }
-        break;
-      }
-
-      case 'bastion': {
-        // Normal 1-step moves
-        for (const dir of ALL_8_DIRECTIONS) {
-          const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
+        // Knight: 8 L-shape jumps
+        for (const jump of KNIGHT_DIRECTIONS) {
+          const target = { row: piece.position.row + jump.dRow, col: piece.position.col + jump.dCol };
           if (isWithinBoard(target, config)) {
             const occupant = getPieceAt(pieces, target);
             if (!occupant) {
-              if (!isMutual) {
-                moves.push({
-                  type: 'move',
-                  pieceId: piece.id,
-                  from: piece.position,
-                  to: target,
-                });
-              }
-            } else if (occupant.owner !== activePlayer) {
-              if (!isMutual || occupant.type === 'regent') {
-                moves.push({
-                  type: 'move',
-                  pieceId: piece.id,
-                  from: piece.position,
-                  to: target,
-                  targetPieceId: occupant.id,
-                });
-              }
-            }
-          }
-        }
-
-        // BASH actions
-        if (!isMutual) {
-          const bashTargets = getLegalBashTargets(piece, pieces, config);
-          for (const target of bashTargets) {
-            moves.push({
-              type: 'bastion_bash',
-              pieceId: piece.id,
-              from: piece.position,
-              targetPieceId: target.id,
-            });
-          }
-        }
-
-        // Siege Mode special abilities
-        if (piece.isSiegeMode) {
-          // Ability 1: Enhanced 2-consecutive BASH
-          const siegeBashTargets = getConsecutiveSiegeBashTargets(piece, pieces, config);
-          for (const sTarget of siegeBashTargets) {
-            if (!isMutual || sTarget.firstTarget.type === 'regent' || sTarget.secondTarget.type === 'regent') {
-              moves.push({
-                type: 'siege_bash_two',
-                pieceId: piece.id,
-                from: piece.position,
-                to: sTarget.landingPosition,
-                targetPieceId: sTarget.firstTarget.id,
-                secondTargetPieceId: sTarget.secondTarget.id,
-              });
-            }
-          }
-
-          // Ability 2: Soldier Leap
-          const leapMoves = getSoldierLeapMoves(piece, pieces, config);
-          for (const lMove of leapMoves) {
-            if (!isMutual || (lMove.targetToCapture && lMove.targetToCapture.type === 'regent')) {
               moves.push({
                 type: 'move',
                 pieceId: piece.id,
                 from: piece.position,
-                to: lMove.destination,
-                targetPieceId: lMove.targetToCapture?.id,
-                isSoldierLeap: true,
-                leapedPieceIds: lMove.jumpedSoldiers.map((s) => s.id),
+                to: target,
+              });
+            } else if (occupant.owner !== activePlayer) {
+              moves.push({
+                type: 'move',
+                pieceId: piece.id,
+                from: piece.position,
+                to: target,
+                targetPieceId: occupant.id,
               });
             }
           }
@@ -259,77 +159,85 @@ export function generateLegalMoves(
       }
 
       case 'soldier': {
-        // Soldier moves only forward or sideways (5 directions: straight forward, forward-left, forward-right, left, right). No backward!
-        const soldierDirs = getSoldierDirections(piece.owner);
-        for (const dir of soldierDirs) {
-          const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
-          if (isWithinBoard(target, config)) {
-            const occupant = getPieceAt(pieces, target);
-            const willReachBaseline = isOpponentBaseline(target, piece.owner, config);
+        // Pawn: moves forward 1 step, 2 steps from starting row, captures diagonally
+        const fwd = piece.owner === 'gold' ? -1 : 1;
+        const startRow = piece.owner === 'gold' ? config.goldSoldierRow : config.silverSoldierRow;
 
-            if (!occupant) {
-              if (!isMutual) {
-                if (willReachBaseline && expandChoices) {
-                  for (const promo of VALID_PROMOTION_CHOICES) {
-                    moves.push({
-                      type: 'move',
-                      pieceId: piece.id,
-                      from: piece.position,
-                      to: target,
-                      promotionChoice: promo,
-                    });
-                  }
-                } else {
-                  moves.push({
-                    type: 'move',
-                    pieceId: piece.id,
-                    from: piece.position,
-                    to: target,
-                  });
-                }
-              }
-            } else if (occupant.owner !== activePlayer) {
-              if (!isMutual || occupant.type === 'regent') {
-                if (willReachBaseline && expandChoices) {
-                  for (const promo of VALID_PROMOTION_CHOICES) {
-                    moves.push({
-                      type: 'move',
-                      pieceId: piece.id,
-                      from: piece.position,
-                      to: target,
-                      targetPieceId: occupant.id,
-                      promotionChoice: promo,
-                    });
-                  }
-                } else {
-                  moves.push({
-                    type: 'move',
-                    pieceId: piece.id,
-                    from: piece.position,
-                    to: target,
-                    targetPieceId: occupant.id,
-                  });
-                }
-              }
+        // 1 step forward
+        const step1 = { row: piece.position.row + fwd, col: piece.position.col };
+        if (isWithinBoard(step1, config) && !getPieceAt(pieces, step1)) {
+          const willPromote = isOpponentBaseline(step1, piece.owner, config);
+          if (willPromote && expandChoices) {
+            for (const promo of VALID_PROMOTION_CHOICES) {
+              moves.push({
+                type: 'move',
+                pieceId: piece.id,
+                from: piece.position,
+                to: step1,
+                promotionChoice: promo,
+              });
+            }
+          } else {
+            moves.push({
+              type: 'move',
+              pieceId: piece.id,
+              from: piece.position,
+              to: step1,
+              promotionChoice: willPromote ? 'champion' : undefined,
+            });
+          }
+
+          // 2 steps forward from starting row
+          if (piece.position.row === startRow) {
+            const step2 = { row: piece.position.row + 2 * fwd, col: piece.position.col };
+            if (isWithinBoard(step2, config) && !getPieceAt(pieces, step2)) {
+              moves.push({
+                type: 'move',
+                pieceId: piece.id,
+                from: piece.position,
+                to: step2,
+              });
             }
           }
         }
 
-        // Friendly Soldier Elimination
-        if (!isMutual) {
-          moves.push({
-            type: 'soldier_sacrifice',
-            pieceId: piece.id,
-            from: piece.position,
-          });
+        // Diagonal forward captures
+        for (const dCol of [-1, 1]) {
+          const diag = { row: piece.position.row + fwd, col: piece.position.col + dCol };
+          if (isWithinBoard(diag, config)) {
+            const occupant = getPieceAt(pieces, diag);
+            if (occupant && occupant.owner !== activePlayer) {
+              const willPromote = isOpponentBaseline(diag, piece.owner, config);
+              if (willPromote && expandChoices) {
+                for (const promo of VALID_PROMOTION_CHOICES) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: diag,
+                    targetPieceId: occupant.id,
+                    promotionChoice: promo,
+                  });
+                }
+              } else {
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: diag,
+                  targetPieceId: occupant.id,
+                  promotionChoice: willPromote ? 'champion' : undefined,
+                });
+              }
+            }
+          }
         }
         break;
       }
     }
   }
 
-  // Enforce chess-style check rule:
-  // A player cannot make any move that leaves or puts their own Regent in check
+  // Filter out any move that leaves or puts own Regent in check
   return moves.filter((m) => {
     const after = simulateMovePieces(pieces, m, config);
     return !isRegentThreatened(after, activePlayer, config);
@@ -341,81 +249,21 @@ export function simulateMovePieces(
   move: Move,
   config: BoardConfig = DEFAULT_BOARD_CONFIG
 ): Piece[] {
-  switch (move.type) {
-    case 'rider_rotate': {
-      return pieces.map((p) => {
-        if (p.id === move.pieceId) {
-          const c = clonePiece(p);
-          if (move.newOrientation) c.orientation = move.newOrientation;
-          return c;
+  if (!move.to) return pieces;
+  const moving = pieces.find((p) => p.id === move.pieceId);
+  if (!moving) return pieces;
+
+  return pieces
+    .filter((p) => p.id !== move.targetPieceId)
+    .map((p) => {
+      if (p.id === moving.id) {
+        const c = clonePiece(p);
+        c.position = clonePosition(move.to!);
+        if (c.type === 'soldier' && move.promotionChoice) {
+          c.type = move.promotionChoice;
         }
-        return p;
-      });
-    }
-
-    case 'soldier_sacrifice': {
-      return pieces.filter((p) => p.id !== move.pieceId);
-    }
-
-    case 'bastion_bash': {
-      const target = pieces.find((p) => p.id === move.targetPieceId);
-      if (!target) return pieces;
-      // In BASH, target piece is displaced or destroyed away from its square
-      return pieces.filter((p) => p.id !== target.id);
-    }
-
-    case 'siege_bash_two': {
-      const bastion = pieces.find((p) => p.id === move.pieceId);
-      if (!bastion || !move.to) return pieces;
-      return pieces
-        .filter((p) => p.id !== move.targetPieceId && p.id !== move.secondTargetPieceId)
-        .map((p) => {
-          if (p.id === bastion.id) {
-            const c = clonePiece(p);
-            c.position = clonePosition(move.to!);
-            return c;
-          }
-          return p;
-        });
-    }
-
-    case 'move': {
-      if (!move.to) return pieces;
-      const moving = pieces.find((p) => p.id === move.pieceId);
-      if (!moving) return pieces;
-
-      if (moving.type === 'oracle' && move.targetPieceId && move.oracleAction === 'convert') {
-        // Oracle is destroyed, target piece switches owner to moving.owner on the same square
-        return pieces
-          .filter((p) => p.id !== moving.id)
-          .map((p) => {
-            if (p.id === move.targetPieceId) {
-              const c = clonePiece(p);
-              c.owner = moving.owner;
-              return c;
-            }
-            return p;
-          });
+        return c;
       }
-
-      // Normal move or capture
-      return pieces
-        .filter((p) => p.id !== move.targetPieceId)
-        .map((p) => {
-          if (p.id === moving.id) {
-            const c = clonePiece(p);
-            c.position = clonePosition(move.to!);
-            if (c.type === 'soldier' && move.promotionChoice) {
-              c.type = move.promotionChoice;
-            }
-            return c;
-          }
-          return p;
-        });
-    }
-
-    default:
-      return pieces;
-  }
+      return p;
+    });
 }
-

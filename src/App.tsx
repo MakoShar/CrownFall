@@ -9,7 +9,6 @@ import { Board } from './components/Board/Board';
 import { PieceActionPanel } from './components/GameControls/PieceActionPanel';
 import { MoveHistory } from './components/MoveHistory/MoveHistory';
 import { PromotionDialog } from './components/PromotionDialog/PromotionDialog';
-import { ConversionDialog } from './components/ConversionDialog/ConversionDialog';
 import { AIAnalysis } from './components/AIAnalysis/AIAnalysis';
 import { TutorialModal } from './components/Tutorial/TutorialModal';
 import { RulesModal } from './components/Rules/RulesModal';
@@ -60,7 +59,6 @@ export const App: React.FC = () => {
 
   // Dialog & Modal States
   const [pendingPromotion, setPendingPromotion] = useState<{ move: Move } | null>(null);
-  const [pendingConversion, setPendingConversion] = useState<{ move: Move; oraclePiece: Piece; targetPiece: Piece } | null>(null);
   const [showAIAnalysis, setShowAIAnalysis] = useState<boolean>(false);
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [showRules, setShowRules] = useState<boolean>(false);
@@ -225,18 +223,9 @@ export const App: React.FC = () => {
     }
   };
 
-  // Inspect move attempt (handle Oracle choice & Promotion dialogs)
+  // Inspect move attempt (handle Soldier promotion dialog)
   const handleMoveAttempt = (move: Move) => {
-    // 1. Oracle Conversion Check
-    if (selectedPiece?.type === 'oracle' && move.targetPieceId && !move.oracleAction) {
-      const target = gameState.pieces.find((p) => p.id === move.targetPieceId);
-      if (target && target.type !== 'champion' && target.type !== 'regent' && target.type !== 'oracle') {
-        setPendingConversion({ move, oraclePiece: selectedPiece, targetPiece: target });
-        return;
-      }
-    }
-
-    // 2. Soldier Promotion Check
+    // Soldier Promotion Check
     const willReachBaseline =
       selectedPiece?.type === 'soldier' &&
       move.to &&
@@ -409,11 +398,11 @@ export const App: React.FC = () => {
                 CROWNFALL
               </h1>
               <span className="px-1.5 py-0.2 rounded text-[8px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
-                Chess with Mods
+                Chess Edition
               </span>
             </div>
             <p className="text-[9px] sm:text-[10px] tracking-wider uppercase font-semibold text-slate-400 hidden xs:block">
-              The Last Kingdom — Original Tactical Strategy
+              The Last Kingdom — Classical Chess
             </p>
           </div>
         </div>
@@ -432,7 +421,7 @@ export const App: React.FC = () => {
           <button
             onClick={() => setShowRules(true)}
             className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors"
-            title="Chess with Mods Codex"
+            title="Rules & Movements Codex"
           >
             <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Codex</span>
@@ -730,18 +719,6 @@ export const App: React.FC = () => {
           onSelect={(choice) => {
             const fullMove = { ...pendingPromotion.move, promotionChoice: choice };
             setPendingPromotion(null);
-            executeFinalMove(fullMove);
-          }}
-        />
-      )}
-
-      {pendingConversion && (
-        <ConversionDialog
-          oraclePiece={pendingConversion.oraclePiece}
-          targetPiece={pendingConversion.targetPiece}
-          onChoice={(choice) => {
-            const fullMove = { ...pendingConversion.move, oracleAction: choice };
-            setPendingConversion(null);
             executeFinalMove(fullMove);
           }}
         />

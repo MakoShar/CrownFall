@@ -1,4 +1,12 @@
-import { BoardConfig, DEFAULT_BOARD_CONFIG, ALL_8_DIRECTIONS, DIAGONAL_DIRECTIONS, getSoldierDirections } from '../config/boardConfig';
+import {
+  BoardConfig,
+  DEFAULT_BOARD_CONFIG,
+  ALL_8_DIRECTIONS,
+  ORTHOGONAL_DIRECTIONS,
+  DIAGONAL_DIRECTIONS,
+  KNIGHT_DIRECTIONS,
+  getPawnAttackDirections,
+} from '../config/boardConfig';
 import { Piece, Position, PlayerColor, isSamePosition, positionKey } from './pieces';
 import { isWithinBoard, getPieceAt } from './board';
 
@@ -61,8 +69,7 @@ export function getPieceRawAttackSquares(
 
   switch (piece.type) {
     case 'regent':
-    case 'bastion':
-      // 8 surrounding squares
+      // King: 8 surrounding squares
       for (const dir of ALL_8_DIRECTIONS) {
         const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
         if (isWithinBoard(target, config)) {
@@ -78,9 +85,47 @@ export function getPieceRawAttackSquares(
       }
       break;
 
+    case 'champion':
+      // Queen: All 8 orthogonal and diagonal rays
+      for (const dir of ALL_8_DIRECTIONS) {
+        addRay(dir.dRow, dir.dCol);
+      }
+      break;
+
+    case 'bastion':
+      // Rook: 4 orthogonal rays
+      for (const dir of ORTHOGONAL_DIRECTIONS) {
+        addRay(dir.dRow, dir.dCol);
+      }
+      break;
+
+    case 'oracle':
+      // Bishop: 4 diagonal rays
+      for (const dir of DIAGONAL_DIRECTIONS) {
+        addRay(dir.dRow, dir.dCol);
+      }
+      break;
+
+    case 'rider':
+      // Knight: 8 L-shape jumps
+      for (const jump of KNIGHT_DIRECTIONS) {
+        const target = { row: piece.position.row + jump.dRow, col: piece.position.col + jump.dCol };
+        if (isWithinBoard(target, config)) {
+          const occupant = getPieceAt(allPieces, target);
+          if (!occupant) {
+            attackSquares.push(target);
+          } else if (occupant.owner === piece.owner) {
+            protectedSquares.push(target);
+          } else {
+            attackSquares.push(target);
+          }
+        }
+      }
+      break;
+
     case 'soldier': {
-      // Forward or sideways only (no backward)
-      const dirs = getSoldierDirections(piece.owner);
+      // Pawn: 2 diagonal forward attack squares
+      const dirs = getPawnAttackDirections(piece.owner);
       for (const dir of dirs) {
         const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
         if (isWithinBoard(target, config)) {
@@ -96,33 +141,6 @@ export function getPieceRawAttackSquares(
       }
       break;
     }
-
-    case 'champion':
-      // All 8 rays
-      for (const dir of ALL_8_DIRECTIONS) {
-        addRay(dir.dRow, dir.dCol);
-      }
-      break;
-
-    case 'oracle':
-      // 4 diagonal rays
-      for (const dir of DIAGONAL_DIRECTIONS) {
-        addRay(dir.dRow, dir.dCol);
-      }
-      break;
-
-    case 'rider':
-      // Along facing axis
-      if (piece.orientation === 'N' || piece.orientation === 'S') {
-        // Vertical axis: up and down
-        addRay(-1, 0);
-        addRay(1, 0);
-      } else if (piece.orientation === 'E' || piece.orientation === 'W') {
-        // Horizontal axis: left and right
-        addRay(0, -1);
-        addRay(0, 1);
-      }
-      break;
   }
 
   return { attackSquares, protectedSquares };

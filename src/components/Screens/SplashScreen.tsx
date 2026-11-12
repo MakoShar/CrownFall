@@ -7,16 +7,16 @@ interface SplashScreenProps {
   onRules: () => void;
 }
 
-const PIECE_NAMES = ['regent', 'champion', 'rider', 'oracle', 'bastion', 'soldier'];
-const PIECE_LABELS = ['Regent', 'Champion', 'Rider', 'Oracle', 'Bastion', 'Soldier'];
-const PIECE_MOD_ARCHETYPES = ['King Mod', 'Queen Mod', 'Rook Mod', 'Bishop Mod', 'Castle Mod', 'Pawn Mod'];
+const PIECE_NAMES = ['regent', 'champion', 'bastion', 'oracle', 'rider', 'soldier'];
+const PIECE_LABELS = ['Regent', 'Champion', 'Bastion', 'Oracle', 'Rider', 'Soldier'];
+const PIECE_CHESS_ROLES = ['King', 'Queen', 'Rook', 'Bishop', 'Knight', 'Pawn'];
 const PIECE_SUBTITLES = [
-  'King Mod • Royal Commander (Check & Checkmate)',
-  'Queen Mod • Supreme Warrior & Divine Immunity',
-  'Rook Mod • Directional Charge & Axis Rotate Mod',
-  'Bishop Mod • Diagonal Stride & Divine Conversion Mod',
-  'Castle Mod • Heavy Guardian, BASH & Siege Mods',
-  'Pawn Mod • 5-Way Advance, Sacrifice & Promotion Mods',
+  'King • 1 Square Any Direction (Check & Checkmate)',
+  'Queen • Any Distance in All 8 Directions',
+  'Rook • Any Distance Horizontally or Vertically',
+  'Bishop • Any Distance Diagonally',
+  'Knight • L-Shape Leap (2 by 1) Over Pieces',
+  'Pawn • Forward Advance & Diagonal Capture',
 ];
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, onRules }) => {
@@ -164,15 +164,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, 
             CROWNFALL
           </h1>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-1 sm:mt-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] sm:text-xs font-semibold tracking-widest uppercase">
-            ⚡ Chess with Mods
+            Classic Chess Edition
           </div>
           <p className="font-fantasy text-sm sm:text-lg md:text-2xl tracking-[0.25em] text-kingdom-silver mt-1 uppercase">
             The Last Kingdom
           </p>
           <div className="mt-3 sm:mt-4 h-px w-48 sm:w-64 mx-auto bg-gradient-to-r from-transparent via-kingdom-gold to-transparent opacity-60" />
           <p className="mt-3 text-slate-400 text-xs sm:text-sm md:text-base italic max-w-md mx-auto leading-relaxed px-4">
-            "Classic chess warfare empowered by tactical piece mods.<br className="hidden sm:inline" />
-            Check, Checkmate, and Special Abilities."
+            "Classic chess gameplay on an epic fantasy battlefield.<br className="hidden sm:inline" />
+            Check, Checkmate, and Sovereign Warfare."
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onPlay, onTutorial, 
                     {PIECE_LABELS[i]}
                   </p>
                   <span className="text-[9px] text-amber-200/70 block uppercase font-mono">
-                    {PIECE_MOD_ARCHETYPES[i]}
+                    {PIECE_CHESS_ROLES[i]}
                   </span>
                 </div>
               )}

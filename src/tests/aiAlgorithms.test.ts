@@ -51,19 +51,16 @@ describe('AI Algorithms Suite', () => {
     expect(astar.path[3]).toEqual({ row: 4, col: 4 });
   });
 
-  it('A* accounts for Rider directional axis constraints', () => {
-    // Rider facing North (vertical axis only)
-    const rider = createPiece('rider', 'gold', { row: 4, col: 4 }, { orientation: 'N' });
+  it('A* accounts for Rider Knight L-jump movement', () => {
+    // Rider on (4, 4)
+    const rider = createPiece('rider', 'gold', { row: 4, col: 4 });
     const pieces = [rider];
-    // Vertical target is reachable directly
-    const verticalTarget = { row: 1, col: 4 };
-    const astarVertical = runAStar(rider, verticalTarget, pieces);
-    expect(astarVertical.success).toBe(true);
-
-    // Horizontal target is NOT reachable without rotation (A* single axis path cannot reach lateral square)
-    const lateralTarget = { row: 4, col: 6 };
-    const astarLateral = runAStar(rider, lateralTarget, pieces);
-    expect(astarLateral.success).toBe(false);
+    // (2, 5) is 1 jump away (2 up, 1 right)
+    const jumpTarget = { row: 2, col: 5 };
+    const astarJump = runAStar(rider, jumpTarget, pieces);
+    expect(astarJump.success).toBe(true);
+    expect(astarJump.cost).toBe(1);
+    expect(astarJump.path).toEqual([{ row: 4, col: 4 }, { row: 2, col: 5 }]);
   });
 
   it('AO* evaluates genuine AND-OR graph and selects optimal compound strategy', () => {

@@ -64,7 +64,7 @@ export const ModeSelectScreen: React.FC<ModeSelectScreenProps> = ({ onSelectMode
           CHOOSE YOUR WAR
         </h2>
         <div className="inline-flex items-center gap-1.5 px-3 py-0.5 mt-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] sm:text-xs font-semibold tracking-wider uppercase">
-          ⚡ Chess with Mods
+          Classic Chess Edition
         </div>
         <p className="text-slate-500 mt-2 text-xs sm:text-sm tracking-widest uppercase">Select a game mode to begin</p>
       </div>

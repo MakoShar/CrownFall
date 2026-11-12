@@ -4,14 +4,14 @@ import { BoardConfig, DEFAULT_BOARD_CONFIG } from './boardConfig';
 export type BackRankLayout = PieceType[];
 
 export const STANDARD_BACK_RANK_PRESET: BackRankLayout = [
-  'bastion',  // col 0
-  'rider',    // col 1
-  'oracle',   // col 2
-  'regent',   // col 3
-  'champion', // col 4
-  'oracle',   // col 5
-  'rider',    // col 6
-  'bastion',  // col 7
+  'bastion',  // col 0 (a): Rook
+  'rider',    // col 1 (b): Knight
+  'oracle',   // col 2 (c): Bishop
+  'champion', // col 3 (d): Queen
+  'regent',   // col 4 (e): King
+  'oracle',   // col 5 (f): Bishop
+  'rider',    // col 6 (g): Knight
+  'bastion',  // col 7 (h): Rook
 ];
 
 export const ALTERNATIVE_BACK_RANK_PRESET: BackRankLayout = [
