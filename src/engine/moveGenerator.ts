@@ -148,59 +148,78 @@ export function generateLegalMoves(
       }
 
       case 'bastion': {
-        // Rook: Passive ability - can jump over a nearby piece by one square
+        // Rook: Passive ability - can jump over a nearby (adjacent) piece by one square.
+        // Cannot move along empty squares and jump at the same time!
         for (const dir of ORTHOGONAL_DIRECTIONS) {
-          let r = piece.position.row + dir.dRow;
-          let c = piece.position.col + dir.dCol;
+          const adjPos = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
+          if (!isWithinBoard(adjPos, config)) continue;
 
-          while (isWithinBoard({ row: r, col: c }, config)) {
-            const occ = getPieceAt(pieces, { row: r, col: c });
-            if (!occ) {
+          const adjOcc = getPieceAt(pieces, adjPos);
+          if (adjOcc) {
+            // Case 1: Immediately adjacent (nearby) piece!
+            // Direct capture of the adjacent piece if enemy:
+            if (isWhite(adjOcc.owner) !== isWhite(activePlayer)) {
               moves.push({
                 type: 'move',
                 pieceId: piece.id,
                 from: piece.position,
-                to: { row: r, col: c },
+                to: adjPos,
+                targetPieceId: adjOcc.id,
               });
-            } else {
-              if (isWhite(occ.owner) !== isWhite(activePlayer)) {
-                // Capture the blocking piece
+            }
+
+            // Passive jump: can leap over this nearby piece by 1 square to land at adjPos + dir (distance 2)!
+            const jumpPos = { row: adjPos.row + dir.dRow, col: adjPos.col + dir.dCol };
+            if (isWithinBoard(jumpPos, config)) {
+              const jumpOcc = getPieceAt(pieces, jumpPos);
+              if (!jumpOcc) {
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: jumpPos,
+                  isRookJump: true,
+                });
+              } else if (isWhite(jumpOcc.owner) !== isWhite(activePlayer)) {
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: jumpPos,
+                  targetPieceId: jumpOcc.id,
+                  isRookJump: true,
+                });
+              }
+            }
+          } else {
+            // Case 2: Adjacent square is empty! The Rook moves normally along the ray.
+            // Since it is moving through empty space, it CANNOT jump!
+            let r = adjPos.row;
+            let c = adjPos.col;
+            while (isWithinBoard({ row: r, col: c }, config)) {
+              const occ = getPieceAt(pieces, { row: r, col: c });
+              if (!occ) {
                 moves.push({
                   type: 'move',
                   pieceId: piece.id,
                   from: piece.position,
                   to: { row: r, col: c },
-                  targetPieceId: occ.id,
                 });
-              }
-
-              // Passive leap: can jump over this nearby piece by 1 square!
-              const jumpPos = { row: r + dir.dRow, col: c + dir.dCol };
-              if (isWithinBoard(jumpPos, config)) {
-                const jumpOcc = getPieceAt(pieces, jumpPos);
-                if (!jumpOcc) {
+              } else {
+                if (isWhite(occ.owner) !== isWhite(activePlayer)) {
                   moves.push({
                     type: 'move',
                     pieceId: piece.id,
                     from: piece.position,
-                    to: jumpPos,
-                    isRookJump: true,
-                  });
-                } else if (isWhite(jumpOcc.owner) !== isWhite(activePlayer)) {
-                  moves.push({
-                    type: 'move',
-                    pieceId: piece.id,
-                    from: piece.position,
-                    to: jumpPos,
-                    targetPieceId: jumpOcc.id,
-                    isRookJump: true,
+                    to: { row: r, col: c },
+                    targetPieceId: occ.id,
                   });
                 }
+                break; // Stopped by obstacle, no jumping allowed after moving!
               }
-              break; // Normal ray blocked past this obstacle
+              r += dir.dRow;
+              c += dir.dCol;
             }
-            r += dir.dRow;
-            c += dir.dCol;
           }
         }
         break;
@@ -366,6 +385,60 @@ export function generateLegalMoves(
                   pieceId: piece.id,
                   from: piece.position,
                   to: diag,
+                  targetPieceId: occupant.id,
+                  promotionChoice: willPromote ? 'champion' : undefined,
+                });
+              }
+            }
+          }
+        }
+
+        // Lateral moves: Left and Right (Passive ability)
+        for (const dCol of [-1, 1]) {
+          const latPos = { row: piece.position.row, col: piece.position.col + dCol };
+          if (isWithinBoard(latPos, config)) {
+            const occupant = getPieceAt(pieces, latPos);
+            const willPromote = isOpponentBaseline(latPos, piece.owner, config);
+            if (!occupant) {
+              // Move to empty square on left / right
+              if (willPromote && expandChoices) {
+                for (const promo of VALID_PROMOTION_CHOICES) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: latPos,
+                    promotionChoice: promo,
+                  });
+                }
+              } else {
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: latPos,
+                  promotionChoice: willPromote ? 'champion' : undefined,
+                });
+              }
+            } else if (isWhite(occupant.owner) !== isWhite(activePlayer)) {
+              // Capture enemy piece on left / right
+              if (willPromote && expandChoices) {
+                for (const promo of VALID_PROMOTION_CHOICES) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: latPos,
+                    targetPieceId: occupant.id,
+                    promotionChoice: promo,
+                  });
+                }
+              } else {
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: latPos,
                   targetPieceId: occupant.id,
                   promotionChoice: willPromote ? 'champion' : undefined,
                 });

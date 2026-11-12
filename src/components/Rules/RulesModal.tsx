@@ -115,8 +115,9 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> Slides any distance along ranks and files.<br />
-                  • <strong>Passive Ability:</strong> Can <strong>jump over a nearby piece by one square</strong> along orthogonal lines (landing 1 square past the obstacle).
+                  • <strong>Movement:</strong> Slides any distance along unobstructed ranks and files.<br />
+                  • <strong>Passive Ability:</strong> Can <strong>jump over a nearby (adjacent) piece by one square</strong> along orthogonal lines. Cannot move across empty squares and jump at the same time.<br />
+                  • <strong>Restriction:</strong> The jump applies to directly adjacent obstacles (distance 1); it cannot slide through empty squares and jump in the same turn.
                 </p>
               </div>
 
@@ -172,14 +173,14 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-amber-200 text-sm">Soldier</span>
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300">SOLDIER (PAWN)</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800">ACTIVE</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300">PASSIVE</span>
                     </div>
-                    <div className="text-[11px] text-slate-400">Friendly Elimination</div>
+                    <div className="text-[11px] text-slate-400">Lateral Advance</div>
                   </div>
                 </div>
                 <p className="text-slate-300">
-                  • <strong>Movement:</strong> 1 square forward (or 2 from starting rank); captures diagonally forward.<br />
-                  • <strong>Friendly Elimination:</strong> Soldiers can voluntarily eliminate themselves to clear ranks and unblock lines.<br />
+                  • <strong>Passive Ability:</strong> Can <strong>move forward, left, and right</strong> too (and capture diagonally forward or sideways).<br />
+                  • <strong>Forward March:</strong> Moves 1 space forward (or 2 spaces from the starting rank).<br />
                   • <strong>Promotion:</strong> Reaching the 8th rank promotes into Queen, Rook, Bishop, or Knight.
                 </p>
               </div>

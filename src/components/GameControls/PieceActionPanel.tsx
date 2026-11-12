@@ -46,7 +46,7 @@ const CHESS_PIECE_PROFILES: Record<
     icon: <Shield className="w-4 h-4 text-orange-400" />,
     specialAbilityTitle: 'Rampart Leap',
     abilityType: 'Passive',
-    specialSummary: 'Can jump over a nearby piece by one square along orthogonal ranks and files.',
+    specialSummary: 'Can jump over a nearby (adjacent) piece by one square. Cannot move across empty squares and jump at the same time.',
     badgeColor: 'border-orange-500/60 bg-orange-950/40 text-orange-300',
   },
   oracle: {
@@ -71,9 +71,9 @@ const CHESS_PIECE_PROFILES: Record<
     chessName: 'SOLDIER (PAWN)',
     unitTitle: 'The Soldier',
     icon: <User className="w-4 h-4 text-emerald-400" />,
-    specialAbilityTitle: 'Friendly Elimination',
-    abilityType: 'Active',
-    specialSummary: 'Advances 1 or 2 steps and captures diagonally. Friendly elimination enabled to voluntarily sacrifice and clear paths.',
+    specialAbilityTitle: 'Lateral Advance',
+    abilityType: 'Passive',
+    specialSummary: 'Passive ability allows it to move forward, left, and right (and capture diagonally forward or sideways). Reaching 8th rank promotes!',
     badgeColor: 'border-emerald-500/60 bg-emerald-950/40 text-emerald-300',
   },
 };

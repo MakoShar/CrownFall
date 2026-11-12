@@ -112,28 +112,57 @@ describe('Special Ability Chess Rules', () => {
     expect(transformedUnit.specialAbilityState?.hasUsedTransform).toBe(true);
   });
 
-  it('Rook (Passive): can jump over a nearby piece by one square along orthogonal lines', () => {
+  it('Rook (Passive): can jump over an adjacent nearby piece by one square, but cannot slide and jump', () => {
     const rook = createPiece('bastion', 'white', { row: 4, col: 4 });
     // Adjacent friendly piece at (3, 4) (1 step North)
     const blockerNorth = createPiece('soldier', 'white', { row: 3, col: 4 });
     // Adjacent enemy piece at (4, 5) (1 step East)
     const enemyEast = createPiece('soldier', 'blue', { row: 4, col: 5 });
+    // Distant enemy piece at (4, 1) (3 steps West, with (4, 2) and (4, 3) empty)
+    const distantWest = createPiece('soldier', 'blue', { row: 4, col: 1 });
     const whiteKing = createPiece('regent', 'white', { row: 7, col: 7 });
     const blueKing = createPiece('regent', 'blue', { row: 0, col: 0 });
 
     const state = createInitialGameState({
-      customPieces: [rook, blockerNorth, enemyEast, whiteKing, blueKing],
+      customPieces: [rook, blockerNorth, enemyEast, distantWest, whiteKing, blueKing],
     });
     const moves = generateLegalMoves(state.pieces, 'white');
     const rookMoves = moves.filter((m) => m.pieceId === rook.id);
     const dests = rookMoves.map((m) => `${m.to!.row},${m.to!.col}`);
 
-    // Can jump over blockerNorth (3, 4) to land at (2, 4)!
+    // Can jump over adjacent blockerNorth (3, 4) to land at (2, 4)!
     expect(dests).toContain('2,4');
 
-    // Can capture enemyEast at (4, 5) AND also jump over it to land at (4, 6)!
+    // Can capture adjacent enemyEast at (4, 5) AND also jump over it to land at (4, 6)!
     expect(dests).toContain('4,5'); // direct capture
-    expect(dests).toContain('4,6'); // jump over enemy by 1 square
+    expect(dests).toContain('4,6'); // jump over nearby piece by 1 square
+
+    // To the West: (4, 3) and (4, 2) are empty. Distant piece at (4, 1).
+    // Rook CAN slide to (4, 3), (4, 2) and capture (4, 1).
+    expect(dests).toContain('4,3');
+    expect(dests).toContain('4,2');
+    expect(dests).toContain('4,1');
+    // But CANNOT jump over distant piece at (4, 1) to land at (4, 0)!
+    expect(dests).not.toContain('4,0');
+  });
+
+  it('Soldier (Passive): can move forward, left, and right too', () => {
+    const soldier = createPiece('soldier', 'white', { row: 4, col: 4 });
+    const enemyLeft = createPiece('soldier', 'blue', { row: 4, col: 3 });
+    const whiteKing = createPiece('regent', 'white', { row: 7, col: 7 });
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 0 });
+
+    const state = createInitialGameState({ customPieces: [soldier, enemyLeft, whiteKing, blueKing] });
+    const moves = generateLegalMoves(state.pieces, 'white');
+    const soldierMoves = moves.filter((m) => m.pieceId === soldier.id && m.type === 'move');
+    const dests = soldierMoves.map((m) => `${m.to!.row},${m.to!.col}`);
+
+    // Can move forward 1 step to (3, 4)
+    expect(dests).toContain('3,4');
+    // Can move right 1 step to empty square (4, 5)
+    expect(dests).toContain('4,5');
+    // Can capture enemy piece on the left at (4, 3)
+    expect(dests).toContain('4,3');
   });
 
   it('Pawn Promotion: Reaching 8th rank promotes into chosen piece', () => {

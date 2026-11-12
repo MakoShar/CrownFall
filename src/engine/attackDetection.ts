@@ -109,36 +109,52 @@ export function getPieceRawAttackSquares(
       break;
 
     case 'bastion':
-      // Rook: 4 orthogonal rays + Passive ability to jump over a nearby piece by 1 square
+      // Rook: 4 orthogonal rays + Passive ability to jump over a nearby (adjacent) piece by 1 square.
+      // Rook cannot move and jump at the same time!
       for (const dir of ORTHOGONAL_DIRECTIONS) {
-        let r = piece.position.row + dir.dRow;
-        let c = piece.position.col + dir.dCol;
-        while (isWithinBoard({ row: r, col: c }, config)) {
-          const occ = getPieceAt(allPieces, { row: r, col: c });
-          if (!occ) {
-            attackSquares.push({ row: r, col: c });
+        const adjPos = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
+        if (!isWithinBoard(adjPos, config)) continue;
+
+        const adjOcc = getPieceAt(allPieces, adjPos);
+        if (adjOcc) {
+          // Immediately adjacent (nearby) piece
+          if (isWhite(adjOcc.owner) === isWhite(piece.owner)) {
+            protectedSquares.push(adjPos);
           } else {
-            if (isWhite(occ.owner) === isWhite(piece.owner)) {
-              protectedSquares.push({ row: r, col: c });
-            } else {
-              attackSquares.push({ row: r, col: c });
-            }
-            // Passive jump: can leap over this nearby piece by 1 square!
-            const jumpSq = { row: r + dir.dRow, col: c + dir.dCol };
-            if (isWithinBoard(jumpSq, config)) {
-              const jumpOcc = getPieceAt(allPieces, jumpSq);
-              if (!jumpOcc) {
-                attackSquares.push(jumpSq);
-              } else if (isWhite(jumpOcc.owner) === isWhite(piece.owner)) {
-                protectedSquares.push(jumpSq);
-              } else {
-                attackSquares.push(jumpSq);
-              }
-            }
-            break; // Stop ray
+            attackSquares.push(adjPos);
           }
-          r += dir.dRow;
-          c += dir.dCol;
+          // Passive jump: can leap over this nearby piece by 1 square to land at distance 2!
+          const jumpSq = { row: adjPos.row + dir.dRow, col: adjPos.col + dir.dCol };
+          if (isWithinBoard(jumpSq, config)) {
+            const jumpOcc = getPieceAt(allPieces, jumpSq);
+            if (!jumpOcc) {
+              attackSquares.push(jumpSq);
+            } else if (isWhite(jumpOcc.owner) === isWhite(piece.owner)) {
+              protectedSquares.push(jumpSq);
+            } else {
+              attackSquares.push(jumpSq);
+            }
+          }
+        } else {
+          // Adjacent square is empty! The Rook slides normally through empty space.
+          // Since it moves through empty space, it CANNOT jump!
+          let r = adjPos.row;
+          let c = adjPos.col;
+          while (isWithinBoard({ row: r, col: c }, config)) {
+            const occ = getPieceAt(allPieces, { row: r, col: c });
+            if (!occ) {
+              attackSquares.push({ row: r, col: c });
+            } else {
+              if (isWhite(occ.owner) === isWhite(piece.owner)) {
+                protectedSquares.push({ row: r, col: c });
+              } else {
+                attackSquares.push({ row: r, col: c });
+              }
+              break; // Ray blocked! No jumping after moving!
+            }
+            r += dir.dRow;
+            c += dir.dCol;
+          }
         }
       }
       break;
@@ -176,7 +192,21 @@ export function getPieceRawAttackSquares(
           const occupant = getPieceAt(allPieces, target);
           if (!occupant) {
             attackSquares.push(target);
-          } else if (occupant.owner === piece.owner) {
+          } else if (isWhite(occupant.owner) === isWhite(piece.owner)) {
+            protectedSquares.push(target);
+          } else {
+            attackSquares.push(target);
+          }
+        }
+      }
+      // Lateral attack squares: Left & Right (Passive ability)
+      for (const dCol of [-1, 1]) {
+        const target = { row: piece.position.row, col: piece.position.col + dCol };
+        if (isWithinBoard(target, config)) {
+          const occupant = getPieceAt(allPieces, target);
+          if (!occupant) {
+            attackSquares.push(target);
+          } else if (isWhite(occupant.owner) === isWhite(piece.owner)) {
             protectedSquares.push(target);
           } else {
             attackSquares.push(target);
