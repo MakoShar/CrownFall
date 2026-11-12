@@ -7,13 +7,15 @@ import {
   KNIGHT_DIRECTIONS,
   getPawnAttackDirections,
 } from '../config/boardConfig';
-import { Piece, Position, PlayerColor, isSamePosition, positionKey } from './pieces';
+import { Piece, Position, PlayerColor, isSamePosition, positionKey, isWhite, isBlue } from './pieces';
 import { isWithinBoard, getPieceAt } from './board';
 
 export interface AttackMap {
   controlledSquares: {
     gold: Set<string>;
     silver: Set<string>;
+    white: Set<string>;
+    blue: Set<string>;
   };
   protectionMap: {
     // pieceId -> array of pieceIds that protect it
@@ -35,6 +37,8 @@ export interface AttackMap {
   regentThreatened: {
     gold: boolean;
     silver: boolean;
+    white: boolean;
+    blue: boolean;
   };
 }
 
@@ -69,17 +73,29 @@ export function getPieceRawAttackSquares(
 
   switch (piece.type) {
     case 'regent':
-      // King: 8 surrounding squares
+      // King: Passive ability - moves up to 2 spaces (cannot jump over pieces)
       for (const dir of ALL_8_DIRECTIONS) {
-        const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
-        if (isWithinBoard(target, config)) {
-          const occupant = getPieceAt(allPieces, target);
-          if (!occupant) {
-            attackSquares.push(target);
-          } else if (occupant.owner === piece.owner) {
-            protectedSquares.push(target);
+        const step1 = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
+        if (isWithinBoard(step1, config)) {
+          const occ1 = getPieceAt(allPieces, step1);
+          if (!occ1) {
+            attackSquares.push(step1);
+            // Can extend to step 2 because intermediate square is empty!
+            const step2 = { row: piece.position.row + 2 * dir.dRow, col: piece.position.col + 2 * dir.dCol };
+            if (isWithinBoard(step2, config)) {
+              const occ2 = getPieceAt(allPieces, step2);
+              if (!occ2) {
+                attackSquares.push(step2);
+              } else if (isWhite(occ2.owner) === isWhite(piece.owner)) {
+                protectedSquares.push(step2);
+              } else {
+                attackSquares.push(step2);
+              }
+            }
+          } else if (isWhite(occ1.owner) === isWhite(piece.owner)) {
+            protectedSquares.push(step1);
           } else {
-            attackSquares.push(target);
+            attackSquares.push(step1);
           }
         }
       }
@@ -93,9 +109,37 @@ export function getPieceRawAttackSquares(
       break;
 
     case 'bastion':
-      // Rook: 4 orthogonal rays
+      // Rook: 4 orthogonal rays + Passive ability to jump over a nearby piece by 1 square
       for (const dir of ORTHOGONAL_DIRECTIONS) {
-        addRay(dir.dRow, dir.dCol);
+        let r = piece.position.row + dir.dRow;
+        let c = piece.position.col + dir.dCol;
+        while (isWithinBoard({ row: r, col: c }, config)) {
+          const occ = getPieceAt(allPieces, { row: r, col: c });
+          if (!occ) {
+            attackSquares.push({ row: r, col: c });
+          } else {
+            if (isWhite(occ.owner) === isWhite(piece.owner)) {
+              protectedSquares.push({ row: r, col: c });
+            } else {
+              attackSquares.push({ row: r, col: c });
+            }
+            // Passive jump: can leap over this nearby piece by 1 square!
+            const jumpSq = { row: r + dir.dRow, col: c + dir.dCol };
+            if (isWithinBoard(jumpSq, config)) {
+              const jumpOcc = getPieceAt(allPieces, jumpSq);
+              if (!jumpOcc) {
+                attackSquares.push(jumpSq);
+              } else if (isWhite(jumpOcc.owner) === isWhite(piece.owner)) {
+                protectedSquares.push(jumpSq);
+              } else {
+                attackSquares.push(jumpSq);
+              }
+            }
+            break; // Stop ray
+          }
+          r += dir.dRow;
+          c += dir.dCol;
+        }
       }
       break;
 
@@ -162,12 +206,12 @@ export function computeAttackMap(
 
   for (const piece of pieces) {
     const { attackSquares, protectedSquares } = getPieceRawAttackSquares(piece, pieces, config);
-    const targetSet = piece.owner === 'gold' ? controlledGold : controlledSilver;
+    const targetSet = isWhite(piece.owner) ? controlledGold : controlledSilver;
 
     for (const sq of attackSquares) {
       targetSet.add(positionKey(sq));
       const targetPiece = getPieceAt(pieces, sq);
-      if (targetPiece && targetPiece.owner !== piece.owner) {
+      if (targetPiece && isWhite(targetPiece.owner) !== isWhite(piece.owner)) {
         threatMap[targetPiece.id].push(piece.id);
       }
     }
@@ -175,7 +219,7 @@ export function computeAttackMap(
     for (const sq of protectedSquares) {
       targetSet.add(positionKey(sq));
       const protectedPiece = getPieceAt(pieces, sq);
-      if (protectedPiece && protectedPiece.owner === piece.owner) {
+      if (protectedPiece && isWhite(protectedPiece.owner) === isWhite(piece.owner)) {
         protectionMap[protectedPiece.id].push(piece.id);
       }
     }
@@ -186,7 +230,7 @@ export function computeAttackMap(
   for (const piece of pieces) {
     const threatenedEnemyIds: string[] = [];
     for (const other of pieces) {
-      if (other.owner !== piece.owner && threatMap[other.id].includes(piece.id)) {
+      if (isWhite(other.owner) !== isWhite(piece.owner) && threatMap[other.id]?.includes(piece.id)) {
         threatenedEnemyIds.push(other.id);
       }
     }
@@ -200,15 +244,15 @@ export function computeAttackMap(
 
   // Detect pins to Regent
   const pinnedUnits: AttackMap['pinnedUnits'] = [];
-  for (const player of ['gold', 'silver'] as PlayerColor[]) {
-    const regent = pieces.find((p) => p.owner === player && p.type === 'regent');
+  for (const player of ['white', 'blue'] as PlayerColor[]) {
+    const regent = pieces.find((p) => isWhite(p.owner) === isWhite(player) && p.type === 'regent');
     if (!regent) continue;
 
-    // Check sliding ray attackers from opponent (champion, oracle, rider)
+    // Check sliding ray attackers from opponent (champion, oracle, bastion)
     const enemySliding = pieces.filter(
       (p) =>
-        p.owner !== player &&
-        (p.type === 'champion' || p.type === 'oracle' || p.type === 'rider')
+        isWhite(p.owner) !== isWhite(player) &&
+        (p.type === 'champion' || p.type === 'oracle' || p.type === 'bastion')
     );
 
     for (const enemy of enemySliding) {
@@ -222,10 +266,7 @@ export function computeAttackMap(
       let canPin = false;
       if (enemy.type === 'champion' && (isOrthogonal || isDiagonal)) canPin = true;
       if (enemy.type === 'oracle' && isDiagonal) canPin = true;
-      if (enemy.type === 'rider') {
-        if ((enemy.orientation === 'N' || enemy.orientation === 'S') && dCol === 0 && dRow !== 0) canPin = true;
-        if ((enemy.orientation === 'E' || enemy.orientation === 'W') && dRow === 0 && dCol !== 0) canPin = true;
-      }
+      if (enemy.type === 'bastion' && isOrthogonal) canPin = true;
 
       if (canPin) {
         let r = enemy.position.row + dRow;
@@ -243,7 +284,7 @@ export function computeAttackMap(
         }
 
         // If exactly 1 friendly piece intervenes between enemy and friendly Regent, it is pinned!
-        if (intervening.length === 1 && intervening[0].owner === player) {
+        if (intervening.length === 1 && isWhite(intervening[0].owner) === isWhite(player)) {
           pinnedUnits.push({
             pieceId: intervening[0].id,
             pinnerId: enemy.id,
@@ -255,21 +296,25 @@ export function computeAttackMap(
   }
 
   // Regent threat check
-  const goldRegent = pieces.find((p) => p.owner === 'gold' && p.type === 'regent');
-  const silverRegent = pieces.find((p) => p.owner === 'silver' && p.type === 'regent');
+  const whiteRegent = pieces.find((p) => isWhite(p.owner) && p.type === 'regent');
+  const blueRegent = pieces.find((p) => isBlue(p.owner) && p.type === 'regent');
 
   return {
     controlledSquares: {
       gold: controlledGold,
       silver: controlledSilver,
+      white: controlledGold,
+      blue: controlledSilver,
     },
     protectionMap,
     threatMap,
     pinnedUnits,
     forks,
     regentThreatened: {
-      gold: goldRegent ? threatMap[goldRegent.id]?.length > 0 : false,
-      silver: silverRegent ? threatMap[silverRegent.id]?.length > 0 : false,
+      gold: whiteRegent ? (threatMap[whiteRegent.id]?.length || 0) > 0 : false,
+      silver: blueRegent ? (threatMap[blueRegent.id]?.length || 0) > 0 : false,
+      white: whiteRegent ? (threatMap[whiteRegent.id]?.length || 0) > 0 : false,
+      blue: blueRegent ? (threatMap[blueRegent.id]?.length || 0) > 0 : false,
     },
   };
 }
@@ -279,11 +324,11 @@ export function isRegentThreatened(
   player: PlayerColor,
   config: BoardConfig = DEFAULT_BOARD_CONFIG
 ): boolean {
-  const regent = pieces.find((p) => p.owner === player && p.type === 'regent');
+  const regent = pieces.find((p) => isWhite(p.owner) === isWhite(player) && p.type === 'regent');
   if (!regent) return false;
 
   for (const piece of pieces) {
-    if (piece.owner === player) continue;
+    if (isWhite(piece.owner) === isWhite(player)) continue;
     const { attackSquares } = getPieceRawAttackSquares(piece, pieces, config);
     if (attackSquares.some((sq) => isSamePosition(sq, regent.position))) {
       return true;

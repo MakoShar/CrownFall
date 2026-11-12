@@ -65,8 +65,8 @@ export const KNIGHT_DIRECTIONS = [
   { dRow: 2, dCol: 1 },
 ] as const;
 
-export function getPawnAttackDirections(owner: 'gold' | 'silver'): { dRow: number; dCol: number }[] {
-  const fwd = owner === 'gold' ? -1 : 1;
+export function getPawnAttackDirections(owner: 'white' | 'blue' | 'gold' | 'silver'): { dRow: number; dCol: number }[] {
+  const fwd = owner === 'white' || owner === 'gold' ? -1 : 1;
   return [
     { dRow: fwd, dCol: -1 },
     { dRow: fwd, dCol: 1 },

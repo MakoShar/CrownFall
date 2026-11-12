@@ -31,12 +31,12 @@ export function createInitialPieces(
 ): Piece[] {
   const pieces: Piece[] = [];
 
-  // Silver Army (Top)
+  // Blue Army (Top)
   // Back rank (row 0 by default)
   for (let col = 0; col < config.cols; col++) {
     const type = backRankPreset[col] || 'soldier';
     pieces.push(
-      createPiece(type, 'silver', { row: config.silverBackRow, col }, {
+      createPiece(type, 'blue', { row: config.silverBackRow, col }, {
         orientation: type === 'rider' ? 'S' : undefined,
       })
     );
@@ -44,22 +44,22 @@ export function createInitialPieces(
   // Front rank / Soldiers (row 1 by default)
   for (let col = 0; col < config.cols; col++) {
     pieces.push(
-      createPiece('soldier', 'silver', { row: config.silverSoldierRow, col })
+      createPiece('soldier', 'blue', { row: config.silverSoldierRow, col })
     );
   }
 
-  // Gold Army (Bottom)
+  // White Army (Bottom)
   // Front rank / Soldiers (row 6 by default)
   for (let col = 0; col < config.cols; col++) {
     pieces.push(
-      createPiece('soldier', 'gold', { row: config.goldSoldierRow, col })
+      createPiece('soldier', 'white', { row: config.goldSoldierRow, col })
     );
   }
   // Back rank (row 7 by default)
   for (let col = 0; col < config.cols; col++) {
     const type = backRankPreset[col] || 'soldier';
     pieces.push(
-      createPiece(type, 'gold', { row: config.goldBackRow, col }, {
+      createPiece(type, 'white', { row: config.goldBackRow, col }, {
         orientation: type === 'rider' ? 'N' : undefined,
       })
     );

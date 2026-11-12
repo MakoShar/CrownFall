@@ -6,17 +6,18 @@ import {
   DIAGONAL_DIRECTIONS,
   KNIGHT_DIRECTIONS,
 } from '../config/boardConfig';
-import { Piece, Position, PlayerColor, PieceType, clonePiece, clonePosition } from './pieces';
+import { Piece, Position, PlayerColor, PieceType, clonePiece, clonePosition, isWhite } from './pieces';
 import { isWithinBoard, getPieceAt, isOpponentBaseline } from './board';
 import { VALID_PROMOTION_CHOICES } from './promotionHandler';
 import { isRegentThreatened } from './attackDetection';
 
 export type MoveType =
   | 'move'
+  | 'soldier_sacrifice'
+  | 'horse_skip_turn'
   | 'rider_rotate'
   | 'bastion_bash'
-  | 'siege_bash_two'
-  | 'soldier_sacrifice';
+  | 'siege_bash_two';
 
 export interface Move {
   type: MoveType;
@@ -25,6 +26,9 @@ export interface Move {
   to?: Position;
   targetPieceId?: string;
   promotionChoice?: PieceType;
+  isBishopTransform?: boolean;
+  isRookJump?: boolean;
+  isKingTwoStep?: boolean;
   // Retained for backward type compatibility
   newOrientation?: 'N' | 'S' | 'E' | 'W';
   oracleAction?: 'capture' | 'convert';
@@ -40,12 +44,14 @@ export function generateLegalMoves(
     isMutualResponse?: boolean;
     expandChoices?: boolean;
     config?: BoardConfig;
+    turnNumber?: number;
   }
 ): Move[] {
   const config = options?.config ?? DEFAULT_BOARD_CONFIG;
   const expandChoices = options?.expandChoices ?? true;
+  const turnNumber = options?.turnNumber;
 
-  const playerPieces = pieces.filter((p) => p.owner === activePlayer);
+  const playerPieces = pieces.filter((p) => isWhite(p.owner) === isWhite(activePlayer));
   const moves: Move[] = [];
 
   const addRayMoves = (piece: Piece, dRow: number, dCol: number) => {
@@ -62,7 +68,7 @@ export function generateLegalMoves(
           to: { row: r, col: c },
         });
       } else {
-        if (occupant.owner !== activePlayer) {
+        if (isWhite(occupant.owner) !== isWhite(activePlayer)) {
           moves.push({
             type: 'move',
             pieceId: piece.id,
@@ -81,25 +87,51 @@ export function generateLegalMoves(
   for (const piece of playerPieces) {
     switch (piece.type) {
       case 'regent': {
-        // King: 1 square in all 8 directions
+        // King: Passive ability - moves up to 2 spaces (cannot jump over pieces)
         for (const dir of ALL_8_DIRECTIONS) {
-          const target = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
-          if (isWithinBoard(target, config)) {
-            const occupant = getPieceAt(pieces, target);
-            if (!occupant) {
+          const step1 = { row: piece.position.row + dir.dRow, col: piece.position.col + dir.dCol };
+          if (isWithinBoard(step1, config)) {
+            const occ1 = getPieceAt(pieces, step1);
+            if (!occ1) {
+              // 1 space move
               moves.push({
                 type: 'move',
                 pieceId: piece.id,
                 from: piece.position,
-                to: target,
+                to: step1,
               });
-            } else if (occupant.owner !== activePlayer) {
+
+              // 2 spaces move (only if intermediate step1 is unobstructed)
+              const step2 = { row: piece.position.row + 2 * dir.dRow, col: piece.position.col + 2 * dir.dCol };
+              if (isWithinBoard(step2, config)) {
+                const occ2 = getPieceAt(pieces, step2);
+                if (!occ2) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: step2,
+                    isKingTwoStep: true,
+                  });
+                } else if (isWhite(occ2.owner) !== isWhite(activePlayer)) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: step2,
+                    targetPieceId: occ2.id,
+                    isKingTwoStep: true,
+                  });
+                }
+              }
+            } else if (isWhite(occ1.owner) !== isWhite(activePlayer)) {
+              // 1 space capture (cannot continue to step 2)
               moves.push({
                 type: 'move',
                 pieceId: piece.id,
                 from: piece.position,
-                to: target,
-                targetPieceId: occupant.id,
+                to: step1,
+                targetPieceId: occ1.id,
               });
             }
           }
@@ -108,7 +140,7 @@ export function generateLegalMoves(
       }
 
       case 'champion': {
-        // Queen: 8 rays (orthogonal & diagonal)
+        // Queen: Overpowered - standard 8 rays (orthogonal & diagonal)
         for (const dir of ALL_8_DIRECTIONS) {
           addRayMoves(piece, dir.dRow, dir.dCol);
         }
@@ -116,52 +148,161 @@ export function generateLegalMoves(
       }
 
       case 'bastion': {
-        // Rook: 4 orthogonal rays
+        // Rook: Passive ability - can jump over a nearby piece by one square
         for (const dir of ORTHOGONAL_DIRECTIONS) {
-          addRayMoves(piece, dir.dRow, dir.dCol);
+          let r = piece.position.row + dir.dRow;
+          let c = piece.position.col + dir.dCol;
+
+          while (isWithinBoard({ row: r, col: c }, config)) {
+            const occ = getPieceAt(pieces, { row: r, col: c });
+            if (!occ) {
+              moves.push({
+                type: 'move',
+                pieceId: piece.id,
+                from: piece.position,
+                to: { row: r, col: c },
+              });
+            } else {
+              if (isWhite(occ.owner) !== isWhite(activePlayer)) {
+                // Capture the blocking piece
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: { row: r, col: c },
+                  targetPieceId: occ.id,
+                });
+              }
+
+              // Passive leap: can jump over this nearby piece by 1 square!
+              const jumpPos = { row: r + dir.dRow, col: c + dir.dCol };
+              if (isWithinBoard(jumpPos, config)) {
+                const jumpOcc = getPieceAt(pieces, jumpPos);
+                if (!jumpOcc) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: jumpPos,
+                    isRookJump: true,
+                  });
+                } else if (isWhite(jumpOcc.owner) !== isWhite(activePlayer)) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: jumpPos,
+                    targetPieceId: jumpOcc.id,
+                    isRookJump: true,
+                  });
+                }
+              }
+              break; // Normal ray blocked past this obstacle
+            }
+            r += dir.dRow;
+            c += dir.dCol;
+          }
         }
         break;
       }
 
       case 'oracle': {
-        // Bishop: 4 diagonal rays
+        // Bishop: Active ability - can transform into any piece they capture (once per game)
+        const canTransform = !piece.specialAbilityState?.hasUsedTransform;
+
         for (const dir of DIAGONAL_DIRECTIONS) {
-          addRayMoves(piece, dir.dRow, dir.dCol);
+          let r = piece.position.row + dir.dRow;
+          let c = piece.position.col + dir.dCol;
+
+          while (isWithinBoard({ row: r, col: c }, config)) {
+            const occ = getPieceAt(pieces, { row: r, col: c });
+            if (!occ) {
+              moves.push({
+                type: 'move',
+                pieceId: piece.id,
+                from: piece.position,
+                to: { row: r, col: c },
+              });
+            } else {
+              if (isWhite(occ.owner) !== isWhite(activePlayer)) {
+                // Standard capture
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: { row: r, col: c },
+                  targetPieceId: occ.id,
+                });
+
+                // Active ability: Transform on capture
+                if (canTransform && expandChoices) {
+                  moves.push({
+                    type: 'move',
+                    pieceId: piece.id,
+                    from: piece.position,
+                    to: { row: r, col: c },
+                    targetPieceId: occ.id,
+                    isBishopTransform: true,
+                  });
+                }
+              }
+              break; // Blocked
+            }
+            r += dir.dRow;
+            c += dir.dCol;
+          }
         }
         break;
       }
 
       case 'rider': {
-        // Knight: 8 L-shape jumps
-        for (const jump of KNIGHT_DIRECTIONS) {
-          const target = { row: piece.position.row + jump.dRow, col: piece.position.col + jump.dCol };
-          if (isWithinBoard(target, config)) {
-            const occupant = getPieceAt(pieces, target);
-            if (!occupant) {
-              moves.push({
-                type: 'move',
-                pieceId: piece.id,
-                from: piece.position,
-                to: target,
-              });
-            } else if (occupant.owner !== activePlayer) {
-              moves.push({
-                type: 'move',
-                pieceId: piece.id,
-                from: piece.position,
-                to: target,
-                targetPieceId: occupant.id,
-              });
+        // Horse (Knight): Active ability - option to skip opponent's turn once; rests on next turn
+        const isResting =
+          piece.specialAbilityState?.skipTurnCooldownUntilTurn !== undefined &&
+          turnNumber !== undefined &&
+          turnNumber < piece.specialAbilityState.skipTurnCooldownUntilTurn;
+
+        if (!isResting) {
+          // Standard 8 L-shape jumps
+          for (const jump of KNIGHT_DIRECTIONS) {
+            const target = { row: piece.position.row + jump.dRow, col: piece.position.col + jump.dCol };
+            if (isWithinBoard(target, config)) {
+              const occupant = getPieceAt(pieces, target);
+              if (!occupant) {
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: target,
+                });
+              } else if (isWhite(occupant.owner) !== isWhite(activePlayer)) {
+                moves.push({
+                  type: 'move',
+                  pieceId: piece.id,
+                  from: piece.position,
+                  to: target,
+                  targetPieceId: occupant.id,
+                });
+              }
             }
+          }
+
+          // Active ability: Skip opponent's turn once
+          if (!piece.specialAbilityState?.hasUsedSkipTurn) {
+            moves.push({
+              type: 'horse_skip_turn',
+              pieceId: piece.id,
+              from: piece.position,
+            });
           }
         }
         break;
       }
 
       case 'soldier': {
-        // Pawn: moves forward 1 step, 2 steps from starting row, captures diagonally
-        const fwd = piece.owner === 'gold' ? -1 : 1;
-        const startRow = piece.owner === 'gold' ? config.goldSoldierRow : config.silverSoldierRow;
+        // Soldier (Pawn): Friendly elimination enabled for soldiers only
+        const fwd = isWhite(piece.owner) ? -1 : 1;
+        const startRow = isWhite(piece.owner) ? config.goldSoldierRow : config.silverSoldierRow;
 
         // 1 step forward
         const step1 = { row: piece.position.row + fwd, col: piece.position.col };
@@ -206,7 +347,7 @@ export function generateLegalMoves(
           const diag = { row: piece.position.row + fwd, col: piece.position.col + dCol };
           if (isWithinBoard(diag, config)) {
             const occupant = getPieceAt(pieces, diag);
-            if (occupant && occupant.owner !== activePlayer) {
+            if (occupant && isWhite(occupant.owner) !== isWhite(activePlayer)) {
               const willPromote = isOpponentBaseline(diag, piece.owner, config);
               if (willPromote && expandChoices) {
                 for (const promo of VALID_PROMOTION_CHOICES) {
@@ -232,6 +373,13 @@ export function generateLegalMoves(
             }
           }
         }
+
+        // Friendly Elimination ability: Soldier can eliminate itself
+        moves.push({
+          type: 'soldier_sacrifice',
+          pieceId: piece.id,
+          from: piece.position,
+        });
         break;
       }
     }
@@ -249,6 +397,14 @@ export function simulateMovePieces(
   move: Move,
   config: BoardConfig = DEFAULT_BOARD_CONFIG
 ): Piece[] {
+  if (move.type === 'soldier_sacrifice') {
+    return pieces.filter((p) => p.id !== move.pieceId);
+  }
+
+  if (move.type === 'horse_skip_turn') {
+    return pieces;
+  }
+
   if (!move.to) return pieces;
   const moving = pieces.find((p) => p.id === move.pieceId);
   if (!moving) return pieces;
@@ -261,6 +417,11 @@ export function simulateMovePieces(
         c.position = clonePosition(move.to!);
         if (c.type === 'soldier' && move.promotionChoice) {
           c.type = move.promotionChoice;
+        } else if (c.type === 'oracle' && move.isBishopTransform && move.targetPieceId) {
+          const target = pieces.find((tp) => tp.id === move.targetPieceId);
+          if (target) {
+            c.type = target.type;
+          }
         }
         return c;
       }

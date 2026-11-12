@@ -36,16 +36,13 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
   size = '100%',
   className = '',
 }) => {
-  const isGold = owner === 'gold';
+  const isWhiteSide = owner === 'white' || owner === 'gold';
   const imgSrc = PIECE_IMAGE[type];
 
-  // Kingdom color tint via CSS filter + border
-  const goldFilter = 'sepia(0.6) saturate(2.5) hue-rotate(5deg) brightness(1.1)';
-  const silverFilter = 'sepia(0.2) saturate(0.5) brightness(1.05) contrast(1.1)';
-  const filter = isGold ? goldFilter : silverFilter;
-
-  // Siege mode extra treatment
-  const siegeFilter = 'sepia(1) saturate(3) hue-rotate(330deg) brightness(1.2)';
+  // Side colors: White side and Blue side
+  const whiteFilter = 'brightness(1.15) contrast(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.6))';
+  const blueFilter = 'hue-rotate(185deg) saturate(2.8) brightness(1.05) drop-shadow(0 2px 4px rgba(0,0,0,0.7))';
+  const filter = isWhiteSide ? whiteFilter : blueFilter;
 
   const containerStyle: React.CSSProperties = {
     width: size,
@@ -58,7 +55,7 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
 
   return (
     <div style={containerStyle} className={`group ${className}`}>
-      {/* Piece image with kingdom tint */}
+      {/* Piece image with side tint */}
       <img
         src={imgSrc}
         alt={type}
@@ -68,23 +65,23 @@ export const PieceIcon: React.FC<PieceIconProps> = ({
           height: '95%',
           objectFit: 'cover',
           objectPosition: 'top',
-          filter: isSiegeMode ? siegeFilter : filter,
+          filter,
           borderRadius: '12%',
           transition: 'filter 0.3s ease',
           display: 'block',
         }}
       />
 
-      {/* Kingdom indicator border glow overlay */}
+      {/* Side indicator border glow overlay */}
       <div
         style={{
           position: 'absolute',
           inset: '2%',
           borderRadius: '14%',
-          border: `2px solid ${isGold ? 'rgba(245,158,11,0.5)' : 'rgba(148,163,184,0.4)'}`,
-          boxShadow: isGold
-            ? '0 0 8px rgba(245,158,11,0.4), inset 0 0 4px rgba(245,158,11,0.1)'
-            : '0 0 8px rgba(148,163,184,0.3), inset 0 0 4px rgba(148,163,184,0.1)',
+          border: `2px solid ${isWhiteSide ? 'rgba(255,255,255,0.85)' : 'rgba(56,189,248,0.9)'}`,
+          boxShadow: isWhiteSide
+            ? '0 0 8px rgba(255,255,255,0.6), inset 0 0 4px rgba(255,255,255,0.2)'
+            : '0 0 8px rgba(14,165,233,0.7), inset 0 0 4px rgba(56,189,248,0.3)',
           pointerEvents: 'none',
         }}
       />

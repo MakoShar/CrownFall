@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameState } from '../../engine/gameState';
-import { Piece, Position, isSamePosition, positionKey } from '../../engine/pieces';
+import { Piece, Position, isSamePosition, positionKey, isWhite, isBlue } from '../../engine/pieces';
 import { Move } from '../../engine/moveGenerator';
 import { AttackMap } from '../../engine/attackDetection';
 import { PieceIcon } from '../Pieces/PieceIcon';
@@ -74,16 +74,16 @@ export const Board: React.FC<BoardProps> = ({
               const isLegalDestination = movesHere.length > 0;
               const isSiegeBashDestination = movesHere.some((m) => m.type === 'siege_bash_two');
 
-              // Checkerboard pattern colors
+              // Checkerboard pattern: white and black squares
               const isLightSquare = (row + col) % 2 === 0;
               const baseBg = isLightSquare
-                ? 'bg-gradient-to-br from-slate-700/90 to-slate-800/90'
-                : 'bg-gradient-to-br from-slate-900 to-black';
+                ? 'bg-[#f1f5f9]'
+                : 'bg-[#18181b]';
 
               // Check status on Regent (always visible, pulses with red warning aura)
               const isRegentInCheck = pieceOnSquare?.type === 'regent' && (
-                (pieceOnSquare.owner === 'gold' && attackMap?.regentThreatened.gold) ||
-                (pieceOnSquare.owner === 'silver' && attackMap?.regentThreatened.silver)
+                (isWhite(pieceOnSquare.owner) && attackMap?.regentThreatened.gold) ||
+                (isBlue(pieceOnSquare.owner) && attackMap?.regentThreatened.silver)
               );
 
               // Tactical overlay indicators
@@ -123,8 +123,8 @@ export const Board: React.FC<BoardProps> = ({
                   {/* Embedded Rank Coordinate (Top-Left corner of column 0) */}
                   {showRankLabel && (
                     <span
-                      className={`absolute top-0.5 left-0.5 z-10 text-[8px] sm:text-[10px] font-mono font-bold pointer-events-none select-none leading-none ${
-                        isLightSquare ? 'text-slate-900/60' : 'text-slate-400/60'
+                      className={`absolute top-0.5 left-0.5 z-10 text-[8px] sm:text-[10px] font-mono font-black pointer-events-none select-none leading-none ${
+                        isLightSquare ? 'text-black/80' : 'text-white/80'
                       }`}
                     >
                       {rankNum}
@@ -134,8 +134,8 @@ export const Board: React.FC<BoardProps> = ({
                   {/* Embedded File Coordinate (Bottom-Right corner of row 7) */}
                   {showFileLabel && (
                     <span
-                      className={`absolute bottom-0.5 right-0.5 z-10 text-[8px] sm:text-[10px] font-mono font-bold pointer-events-none select-none leading-none ${
-                        isLightSquare ? 'text-slate-900/60' : 'text-slate-400/60'
+                      className={`absolute bottom-0.5 right-0.5 z-10 text-[8px] sm:text-[10px] font-mono font-black pointer-events-none select-none leading-none ${
+                        isLightSquare ? 'text-black/80' : 'text-white/80'
                       }`}
                     >
                       {fileLetter}

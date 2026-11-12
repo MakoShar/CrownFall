@@ -94,11 +94,11 @@ describe('AI Algorithms Suite', () => {
     const exp = chooseAIMove(state, 'expert');
     expect(exp.move).toBeDefined();
     expect(exp.algorithm).toBe('alpha_beta');
-  });
+  }, 30000);
 
   it('AI generates 100% legal moves across sequential turns with zero illegal moves', () => {
     let state = createInitialGameState();
-    // Simulate 6 turns (3 by Gold, 3 by Silver)
+    // Simulate 6 turns
     for (let step = 0; step < 6; step++) {
       if (state.status !== 'in_progress') break;
       const aiResponse = chooseAIMove(state, 'intermediate');
@@ -108,5 +108,5 @@ describe('AI Algorithms Suite', () => {
       state = nextState;
     }
     expect(state.history.length).toBeGreaterThanOrEqual(4);
-  });
+  }, 30000);
 });

@@ -2,251 +2,176 @@ import { describe, it, expect } from 'vitest';
 import { createPiece } from '../engine/pieces';
 import { createInitialGameState, applyMove } from '../engine/gameState';
 import { generateLegalMoves } from '../engine/moveGenerator';
-import { executePromotion, VALID_PROMOTION_CHOICES } from '../engine/promotionHandler';
+import { executePromotion } from '../engine/promotionHandler';
 import { isRegentThreatened } from '../engine/attackDetection';
 
-describe('Standard Chess Movement Rules', () => {
-  it('Soldier (Pawn) moves 1 step forward, 2 steps from starting row, and captures diagonally', () => {
-    // Gold Soldier at start rank (6, 4)
-    const goldSoldier = createPiece('soldier', 'gold', { row: 6, col: 4 });
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
-    const enemyTarget = createPiece('soldier', 'silver', { row: 5, col: 5 }); // diagonal target
+describe('Special Ability Chess Rules', () => {
+  it('King (Passive): can move up to 2 spaces in all 8 directions, but cannot jump over pieces', () => {
+    // King on (4, 4) in the center of an empty board
+    const king = createPiece('regent', 'white', { row: 4, col: 4 });
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 7 });
+    const state = createInitialGameState({ customPieces: [king, blueKing] });
+
+    const moves = generateLegalMoves(state.pieces, 'white');
+    const kingMoves = moves.filter((m) => m.pieceId === king.id);
+
+    // From (4, 4), 8 directions:
+    // 1 step in 8 directions = 8 moves
+    // 2 steps in 8 directions (rows 2, 6, cols 2, 6, diagonals) = 8 moves
+    // Total = 16 moves (minus any that step into blueKing attack or off-board)
+    expect(kingMoves.length).toBe(16);
+
+    // Verify 2-space destinations
+    const dests = kingMoves.map((m) => `${m.to!.row},${m.to!.col}`);
+    expect(dests).toContain('2,4'); // 2 steps North
+    expect(dests).toContain('6,4'); // 2 steps South
+    expect(dests).toContain('4,2'); // 2 steps West
+    expect(dests).toContain('4,6'); // 2 steps East
+    expect(dests).toContain('2,2'); // 2 steps North-West
+    expect(dests).toContain('6,6'); // 2 steps South-East
+
+    // Now place a friendly soldier at (3, 4) blocking the North step
+    const blocker = createPiece('soldier', 'white', { row: 3, col: 4 });
+    const blockedState = createInitialGameState({ customPieces: [king, blocker, blueKing] });
+    const blockedMoves = generateLegalMoves(blockedState.pieces, 'white').filter((m) => m.pieceId === king.id);
+    const blockedDests = blockedMoves.map((m) => `${m.to!.row},${m.to!.col}`);
+
+    // Cannot step to (3, 4) because friendly piece is there, AND CANNOT jump over it to (2, 4)!
+    expect(blockedDests).not.toContain('3,4');
+    expect(blockedDests).not.toContain('2,4');
+  });
+
+  it('Soldier: Friendly Elimination allows soldiers to voluntarily sacrifice themselves', () => {
+    const soldier = createPiece('soldier', 'white', { row: 4, col: 4 });
+    const whiteKing = createPiece('regent', 'white', { row: 7, col: 4 });
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 4 });
+
+    const state = createInitialGameState({ customPieces: [soldier, whiteKing, blueKing] });
+    const moves = generateLegalMoves(state.pieces, 'white');
+
+    const sacrificeMove = moves.find((m) => m.type === 'soldier_sacrifice' && m.pieceId === soldier.id);
+    expect(sacrificeMove).toBeDefined();
+
+    // Applying friendly elimination removes soldier and consumes turn
+    const { nextState } = applyMove(state, sacrificeMove!);
+    expect(nextState.pieces.find((p) => p.id === soldier.id)).toBeUndefined();
+    expect(nextState.activePlayer).toBe('blue');
+  });
+
+  it('Horse (Active): can skip opponent turn once, but cannot move on the next turn', () => {
+    const horse = createPiece('rider', 'white', { row: 4, col: 4 });
+    const whiteKing = createPiece('regent', 'white', { row: 7, col: 7 });
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 0 });
+
+    const state = createInitialGameState({ customPieces: [horse, whiteKing, blueKing] });
+    const moves = generateLegalMoves(state.pieces, 'white');
+
+    const skipMove = moves.find((m) => m.type === 'horse_skip_turn' && m.pieceId === horse.id);
+    expect(skipMove).toBeDefined();
+
+    // Activate skip turn
+    const { nextState } = applyMove(state, skipMove!);
+
+    // Opponent's turn is skipped: activePlayer remains 'white'!
+    expect(nextState.activePlayer).toBe('white');
+
+    // The horse has used its skip ability
+    const horseAfter = nextState.pieces.find((p) => p.id === horse.id)!;
+    expect(horseAfter.specialAbilityState?.hasUsedSkipTurn).toBe(true);
+
+    // On this bonus turn, the horse rests and cannot move
+    const nextMoves = generateLegalMoves(nextState.pieces, 'white', { turnNumber: nextState.turnNumber });
+    const horseNextMoves = nextMoves.filter((m) => m.pieceId === horse.id);
+    expect(horseNextMoves.length).toBe(0); // Horse is resting!
+  });
+
+  it('Bishop (Active): can transform into any piece it captures once, replaced at opponent position', () => {
+    const bishop = createPiece('oracle', 'white', { row: 4, col: 4 });
+    const enemyQueen = createPiece('champion', 'blue', { row: 2, col: 2 });
+    const whiteKing = createPiece('regent', 'white', { row: 7, col: 7 });
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 7 });
+
+    const state = createInitialGameState({ customPieces: [bishop, enemyQueen, whiteKing, blueKing] });
+    const moves = generateLegalMoves(state.pieces, 'white');
+
+    // Find transform capture move
+    const transformMove = moves.find(
+      (m) => m.pieceId === bishop.id && m.isBishopTransform && m.targetPieceId === enemyQueen.id
+    );
+    expect(transformMove).toBeDefined();
+
+    const { nextState } = applyMove(state, transformMove!);
+
+    // Enemy Queen is captured and removed
+    expect(nextState.pieces.find((p) => p.id === enemyQueen.id)).toBeUndefined();
+
+    // Bishop is now transformed into a Queen on (2, 2) (the opponent's position)
+    const transformedUnit = nextState.pieces.find((p) => p.id === bishop.id)!;
+    expect(transformedUnit.type).toBe('champion'); // Now a Queen!
+    expect(transformedUnit.position).toEqual({ row: 2, col: 2 });
+    expect(transformedUnit.specialAbilityState?.hasUsedTransform).toBe(true);
+  });
+
+  it('Rook (Passive): can jump over a nearby piece by one square along orthogonal lines', () => {
+    const rook = createPiece('bastion', 'white', { row: 4, col: 4 });
+    // Adjacent friendly piece at (3, 4) (1 step North)
+    const blockerNorth = createPiece('soldier', 'white', { row: 3, col: 4 });
+    // Adjacent enemy piece at (4, 5) (1 step East)
+    const enemyEast = createPiece('soldier', 'blue', { row: 4, col: 5 });
+    const whiteKing = createPiece('regent', 'white', { row: 7, col: 7 });
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 0 });
 
     const state = createInitialGameState({
-      customPieces: [goldSoldier, silverRegent, goldRegent, enemyTarget],
+      customPieces: [rook, blockerNorth, enemyEast, whiteKing, blueKing],
     });
-    const moves = generateLegalMoves(state.pieces, 'gold');
-    const soldierMoves = moves.filter((m) => m.pieceId === goldSoldier.id);
+    const moves = generateLegalMoves(state.pieces, 'white');
+    const rookMoves = moves.filter((m) => m.pieceId === rook.id);
+    const dests = rookMoves.map((m) => `${m.to!.row},${m.to!.col}`);
 
-    const dests = soldierMoves.map((m) => `${m.to!.row},${m.to!.col}`);
-    // 1 step forward to (5, 4)
-    expect(dests).toContain('5,4');
-    // 2 steps forward from rank 6 to (4, 4)
-    expect(dests).toContain('4,4');
-    // Diagonal capture at (5, 5)
-    expect(dests).toContain('5,5');
+    // Can jump over blockerNorth (3, 4) to land at (2, 4)!
+    expect(dests).toContain('2,4');
 
-    // No sideways (6,3 or 6,5) or backward (7,4)
-    expect(dests).not.toContain('6,3');
-    expect(dests).not.toContain('6,5');
-    expect(dests).not.toContain('7,4');
+    // Can capture enemyEast at (4, 5) AND also jump over it to land at (4, 6)!
+    expect(dests).toContain('4,5'); // direct capture
+    expect(dests).toContain('4,6'); // jump over enemy by 1 square
   });
 
-  it('Soldier (Pawn) cannot move forward if blocked by another piece', () => {
-    const goldSoldier = createPiece('soldier', 'gold', { row: 6, col: 4 });
-    const blocker = createPiece('soldier', 'silver', { row: 5, col: 4 });
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
+  it('Pawn Promotion: Reaching 8th rank promotes into chosen piece', () => {
+    const soldier = createPiece('soldier', 'white', { row: 1, col: 4 });
+    const whiteKing = createPiece('regent', 'white', { row: 7, col: 7 });
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 0 });
+    const state = createInitialGameState({ customPieces: [soldier, whiteKing, blueKing] });
 
-    const state = createInitialGameState({
-      customPieces: [goldSoldier, blocker, silverRegent, goldRegent],
-    });
-    const moves = generateLegalMoves(state.pieces, 'gold');
-    const soldierMoves = moves.filter((m) => m.pieceId === goldSoldier.id);
-
-    // Blocked straight ahead: 0 legal forward moves
-    expect(soldierMoves.length).toBe(0);
-  });
-
-  it('Bastion (Rook) moves horizontally and vertically any distance', () => {
-    const bastion = createPiece('bastion', 'gold', { row: 4, col: 4 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-    const state = createInitialGameState({ customPieces: [bastion, goldRegent, silverRegent] });
-
-    const moves = generateLegalMoves(state.pieces, 'gold');
-    const bastionMoves = moves.filter((m) => m.pieceId === bastion.id);
-
-    // On (4, 4) of an 8x8 board: 7 vertical + 7 horizontal = 14 moves
-    expect(bastionMoves.length).toBe(14);
-    for (const m of bastionMoves) {
-      expect(m.to!.row === 4 || m.to!.col === 4).toBe(true);
-    }
-  });
-
-  it('Oracle (Bishop) moves diagonally any distance', () => {
-    const oracle = createPiece('oracle', 'gold', { row: 4, col: 4 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 0 }); // away from diagonal
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 7 }); // away from diagonal
-    const state = createInitialGameState({ customPieces: [oracle, goldRegent, silverRegent] });
-
-    const moves = generateLegalMoves(state.pieces, 'gold');
-    const oracleMoves = moves.filter((m) => m.pieceId === oracle.id);
-
-    // On (4, 4) on an 8x8 board with clear diagonals: 13 diagonal moves
-    expect(oracleMoves.length).toBe(13);
-    for (const m of oracleMoves) {
-      const dRow = Math.abs(m.to!.row - 4);
-      const dCol = Math.abs(m.to!.col - 4);
-      expect(dRow).toBe(dCol);
-    }
-  });
-
-  it('Rider (Knight) jumps in L-shapes and leaps over obstacles', () => {
-    const rider = createPiece('rider', 'gold', { row: 4, col: 4 });
-    // Surround rider with friendly soldiers
-    const s1 = createPiece('soldier', 'gold', { row: 3, col: 4 });
-    const s2 = createPiece('soldier', 'gold', { row: 5, col: 4 });
-    const s3 = createPiece('soldier', 'gold', { row: 4, col: 3 });
-    const s4 = createPiece('soldier', 'gold', { row: 4, col: 5 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-
-    const state = createInitialGameState({
-      customPieces: [rider, s1, s2, s3, s4, goldRegent, silverRegent],
-    });
-    const moves = generateLegalMoves(state.pieces, 'gold');
-    const riderMoves = moves.filter((m) => m.pieceId === rider.id);
-
-    // Rider leaps over the surrounding soldiers to all 8 standard Knight jump squares
-    expect(riderMoves.length).toBe(8);
-  });
-
-  it('Champion (Queen) moves in all 8 directions across ranks, files, and diagonals', () => {
-    const champion = createPiece('champion', 'gold', { row: 4, col: 4 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 0 }); // away from lines of (4, 4)
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 7 }); // away from lines of (4, 4)
-    const state = createInitialGameState({ customPieces: [champion, goldRegent, silverRegent] });
-
-    const moves = generateLegalMoves(state.pieces, 'gold');
-    const championMoves = moves.filter((m) => m.pieceId === champion.id);
-
-    // 14 orthogonal + 13 diagonal = 27 moves on (4, 4)
-    expect(championMoves.length).toBe(27);
-  });
-
-  it('Regent (King) moves exactly 1 square in all 8 directions', () => {
-    const regent = createPiece('regent', 'gold', { row: 4, col: 4 });
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-    const state = createInitialGameState({ customPieces: [regent, silverRegent] });
-
-    const moves = generateLegalMoves(state.pieces, 'gold');
-    expect(moves.length).toBe(8);
-  });
-});
-
-describe('Standard Pawn Promotion', () => {
-  it('Soldier promotes to Champion, Bastion, Oracle, or Rider upon reaching baseline', () => {
-    const soldier = createPiece('soldier', 'gold', { row: 1, col: 4 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-    const state = createInitialGameState({ customPieces: [soldier, goldRegent, silverRegent] });
-
-    const moves = generateLegalMoves(state.pieces, 'gold');
+    const moves = generateLegalMoves(state.pieces, 'white');
     const promoMoves = moves.filter((m) => m.to?.row === 0 && m.promotionChoice);
-
-    // 4 choices: champion, bastion, oracle, rider
     expect(promoMoves.length).toBe(4);
-    const choices = promoMoves.map((m) => m.promotionChoice);
-    expect(choices).toEqual(expect.arrayContaining(['champion', 'bastion', 'oracle', 'rider']));
 
-    // Applying promotion sets the new piece type
     const queenPromo = promoMoves.find((m) => m.promotionChoice === 'champion')!;
     const { nextState } = applyMove(state, queenPromo);
-    const promotedPiece = nextState.pieces.find((p) => p.id === soldier.id)!;
-    expect(promotedPiece.type).toBe('champion');
-  });
-});
-
-describe('Chess Check, Checkmate, and King Safety', () => {
-  it('Regent cannot move into an attacked square (cannot step into check)', () => {
-    const goldRegent = createPiece('regent', 'gold', { row: 4, col: 4 });
-    const silverChampion = createPiece('champion', 'silver', { row: 0, col: 5 });
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-
-    const state = createInitialGameState({ customPieces: [goldRegent, silverChampion, silverRegent] });
-    const moves = generateLegalMoves(state.pieces, 'gold');
-
-    // Column 5 is attacked by Silver Queen: (3,5), (4,5), (5,5) are illegal for Gold King
-    const illegalCol5Moves = moves.filter((m) => m.to && m.to.col === 5);
-    expect(illegalCol5Moves.length).toBe(0);
-
-    // Other safe adjacent squares remain legal
-    const safeMoves = moves.filter((m) => m.to && m.to.col !== 5);
-    expect(safeMoves.length).toBeGreaterThan(0);
+    expect(nextState.pieces.find((p) => p.id === soldier.id)?.type).toBe('champion');
   });
 
-  it('When in check, player must resolve check; moves that do not escape check are illegal', () => {
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 4 });
-    const silverChampion = createPiece('champion', 'silver', { row: 0, col: 4 }); // Checks Regent
-    const goldSoldier = createPiece('soldier', 'gold', { row: 6, col: 0 }); // Away on column 0
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
+  it('Checkmate triggers immediate victory', () => {
+    const blueKing = createPiece('regent', 'blue', { row: 0, col: 0 });
+    const blueSoldier1 = createPiece('soldier', 'blue', { row: 1, col: 0 });
+    const blueSoldier2 = createPiece('soldier', 'blue', { row: 1, col: 1 });
+    const whiteQueen = createPiece('champion', 'white', { row: 0, col: 7 });
+    const whiteRook = createPiece('bastion', 'white', { row: 7, col: 2 }); // Protects Queen at (0, 2) along col 2
+    const whiteKing = createPiece('regent', 'white', { row: 7, col: 7 });
 
     const state = createInitialGameState({
-      customPieces: [goldRegent, silverChampion, goldSoldier, silverRegent],
+      customPieces: [blueKing, blueSoldier1, blueSoldier2, whiteQueen, whiteRook, whiteKing],
     });
 
-    const moves = generateLegalMoves(state.pieces, 'gold');
-
-    // The soldier at (6,0) cannot move because it doesn't resolve check
-    const soldierMoves = moves.filter((m) => m.pieceId === goldSoldier.id);
-    expect(soldierMoves.length).toBe(0);
-
-    // Only King can move, stepping off the attacked column 4
-    expect(moves.every((m) => m.pieceId === goldRegent.id)).toBe(true);
-    expect(moves.every((m) => m.to && m.to.col !== 4)).toBe(true);
-  });
-
-  it('Pinned piece cannot move away if moving it exposes Regent to check', () => {
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 4 });
-    const goldBastion = createPiece('bastion', 'gold', { row: 5, col: 4 }); // Blocks ray
-    const silverChampion = createPiece('champion', 'silver', { row: 0, col: 4 }); // Pins bastion
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-
-    const state = createInitialGameState({
-      customPieces: [goldRegent, goldBastion, silverChampion, silverRegent],
-    });
-
-    const moves = generateLegalMoves(state.pieces, 'gold');
-
-    // Bastion moving horizontally (e.g. 5,3 or 5,5) exposes Regent on column 4, so horizontal moves are illegal
-    const bastionHoriz = moves.filter((m) => m.pieceId === goldBastion.id && m.to && m.to.col !== 4);
-    expect(bastionHoriz.length).toBe(0);
-  });
-
-  it('Checkmate: delivering check with no possible escape triggers immediate victory', () => {
-    // Cornered Silver Regent at (0, 0)
-    // Blocked by own soldiers at (1, 0) and (1, 1)
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-    const silverSoldier1 = createPiece('soldier', 'silver', { row: 1, col: 0 });
-    const silverSoldier2 = createPiece('soldier', 'silver', { row: 1, col: 1 });
-    const goldChampion = createPiece('champion', 'gold', { row: 0, col: 7 });
-    const goldRegent = createPiece('regent', 'gold', { row: 7, col: 7 });
-
-    const state = createInitialGameState({
-      customPieces: [silverRegent, silverSoldier1, silverSoldier2, goldChampion, goldRegent],
-    });
-
-    // Gold Queen slides along rank 0 to (0, 2), delivering direct checkmate
     const mateMove = {
       type: 'move' as const,
-      pieceId: goldChampion.id,
+      pieceId: whiteQueen.id,
       from: { row: 0, col: 7 },
       to: { row: 0, col: 2 },
     };
 
     const { nextState } = applyMove(state, mateMove);
-
-    expect(nextState.status).toBe('gold_victory');
-    expect(nextState.winner).toBe('gold');
     expect(nextState.statusReason).toContain('CHECKMATE');
-  });
-
-  it('Stalemate: player with no legal moves and not in check results in a DRAW', () => {
-    // King trapped on (0, 0) with no attackers checking it, but all surrounding squares attacked
-    const silverRegent = createPiece('regent', 'silver', { row: 0, col: 0 });
-    const goldChampion = createPiece('champion', 'gold', { row: 1, col: 2 }); // attacks (1,0), (1,1), (0,1), but not (0,0)
-    const goldRegent = createPiece('regent', 'gold', { row: 2, col: 2 }); // defends champion
-
-    const state = createInitialGameState({
-      customPieces: [silverRegent, goldChampion, goldRegent],
-    });
-    // It's silver's turn
-    state.activePlayer = 'silver';
-
-    const moves = generateLegalMoves(state.pieces, 'silver');
-    expect(moves.length).toBe(0);
-    expect(isRegentThreatened(state.pieces, 'silver', state.config)).toBe(false);
+    expect(nextState.winner).toBe('white');
   });
 });

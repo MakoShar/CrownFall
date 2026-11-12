@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GameState, createInitialGameState, applyMove, cloneGameState } from './engine/gameState';
-import { Piece, Position, isSamePosition, PlayerColor, PieceType } from './engine/pieces';
+import { Piece, Position, isSamePosition, PlayerColor, PieceType, isWhite, isBlue } from './engine/pieces';
 import { Move, generateLegalMoves } from './engine/moveGenerator';
 import { computeAttackMap, AttackMap } from './engine/attackDetection';
 import { AIDifficulty, DIFFICULTY_PRESETS } from './ai/difficulty';
@@ -59,6 +59,7 @@ export const App: React.FC = () => {
 
   // Dialog & Modal States
   const [pendingPromotion, setPendingPromotion] = useState<{ move: Move } | null>(null);
+  const [pendingBishopTransform, setPendingBishopTransform] = useState<{ move: Move; targetPiece: Piece } | null>(null);
   const [showAIAnalysis, setShowAIAnalysis] = useState<boolean>(false);
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [showRules, setShowRules] = useState<boolean>(false);
@@ -223,14 +224,23 @@ export const App: React.FC = () => {
     }
   };
 
-  // Inspect move attempt (handle Soldier promotion dialog)
+  // Inspect move attempt (handle Bishop transformation & Soldier promotion dialogs)
   const handleMoveAttempt = (move: Move) => {
-    // Soldier Promotion Check
+    // 1. Bishop Transformation Check
+    if (selectedPiece?.type === 'oracle' && move.targetPieceId && !selectedPiece.specialAbilityState?.hasUsedTransform) {
+      const target = gameState.pieces.find((p) => p.id === move.targetPieceId);
+      if (target) {
+        setPendingBishopTransform({ move, targetPiece: target });
+        return;
+      }
+    }
+
+    // 2. Soldier Promotion Check
     const willReachBaseline =
       selectedPiece?.type === 'soldier' &&
       move.to &&
-      ((selectedPiece.owner === 'gold' && move.to.row === 0) ||
-        (selectedPiece.owner === 'silver' && move.to.row === 7));
+      ((isWhite(selectedPiece.owner) && move.to.row === 0) ||
+        (isBlue(selectedPiece.owner) && move.to.row === 7));
 
     if (willReachBaseline && !move.promotionChoice) {
       setPendingPromotion({ move });
@@ -250,9 +260,7 @@ export const App: React.FC = () => {
       // Play audio cue
       if (nextState.statusReason?.includes('CHECK!') || nextState.statusReason?.includes('CHECKMATE!')) {
         playSoundEffect('check');
-      } else if (move.type === 'bastion_bash' || move.type === 'siege_bash_two') {
-        playSoundEffect('bash');
-      } else if (move.oracleAction === 'convert') {
+      } else if (move.type === 'horse_skip_turn' || move.isBishopTransform) {
         playSoundEffect('convert');
       } else if (move.targetPieceId) {
         playSoundEffect('capture');
@@ -311,8 +319,8 @@ export const App: React.FC = () => {
   };
 
   // Graveyard / Captured pieces count
-  const goldPiecesRemaining = gameState.pieces.filter((p) => p.owner === 'gold');
-  const silverPiecesRemaining = gameState.pieces.filter((p) => p.owner === 'silver');
+  const whitePiecesRemaining = gameState.pieces.filter((p) => isWhite(p.owner));
+  const bluePiecesRemaining = gameState.pieces.filter((p) => isBlue(p.owner));
 
   // ─── SCREEN ROUTING ────────────────────────────────────────────────────────
 
@@ -491,9 +499,9 @@ export const App: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div
                   className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 shadow-lg ${
-                    gameState.activePlayer === 'gold'
-                      ? 'bg-amber-950/60 border-kingdom-gold shadow-regal-gold'
-                      : 'bg-blue-950/60 border-blue-400'
+                    isWhite(gameState.activePlayer)
+                      ? 'bg-slate-900 border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.4)]'
+                      : 'bg-blue-950/80 border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
                   }`}
                 >
                   <PieceIcon
@@ -504,31 +512,31 @@ export const App: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-xs text-slate-400 font-medium">Active Command</div>
-                  <div className="text-lg font-fantasy font-bold text-amber-200 capitalize">
-                    {gameState.activePlayer} Kingdom
+                  <div className="text-lg font-fantasy font-bold text-white capitalize">
+                    {isWhite(gameState.activePlayer) ? 'White Side' : 'Blue Side'}
                   </div>
                 </div>
               </div>
 
               {/* Force Counters */}
               <div className="flex items-center gap-2">
-                <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/30 text-right">
-                  <div className="text-[10px] uppercase font-bold text-amber-400 flex items-center justify-end gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    Gold
+                <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-white/30 text-right">
+                  <div className="text-[10px] uppercase font-bold text-slate-100 flex items-center justify-end gap-1">
+                    <span className="w-2 h-2 rounded-full bg-white shadow-sm" />
+                    White
                   </div>
                   <div className="text-sm font-mono font-bold text-slate-200">
-                    {goldPiecesRemaining.length} <span className="text-xs text-slate-500 font-normal">/ 16</span>
+                    {whitePiecesRemaining.length} <span className="text-xs text-slate-500 font-normal">/ 16</span>
                   </div>
                 </div>
 
-                <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-blue-500/30 text-right">
-                  <div className="text-[10px] uppercase font-bold text-blue-400 flex items-center justify-end gap-1">
-                    <span className="w-2 h-2 rounded-full bg-blue-400" />
-                    Silver
+                <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-sky-500/30 text-right">
+                  <div className="text-[10px] uppercase font-bold text-sky-400 flex items-center justify-end gap-1">
+                    <span className="w-2 h-2 rounded-full bg-sky-400 shadow-sm" />
+                    Blue
                   </div>
                   <div className="text-sm font-mono font-bold text-slate-200">
-                    {silverPiecesRemaining.length} <span className="text-xs text-slate-500 font-normal">/ 16</span>
+                    {bluePiecesRemaining.length} <span className="text-xs text-slate-500 font-normal">/ 16</span>
                   </div>
                 </div>
               </div>
@@ -722,6 +730,46 @@ export const App: React.FC = () => {
             executeFinalMove(fullMove);
           }}
         />
+      )}
+
+      {/* Bishop Soul Transmutation Modal */}
+      {pendingBishopTransform && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="relative max-w-md w-full bg-slate-900 border-2 border-indigo-500 rounded-2xl p-6 shadow-2xl text-center">
+            <div className="inline-block px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500 text-indigo-300 text-xs font-mono font-bold tracking-widest uppercase mb-2">
+              Bishop Active Ability (1/1)
+            </div>
+            <h3 className="text-xl font-fantasy font-bold text-slate-100 mb-2">
+              Soul Transmutation
+            </h3>
+            <p className="text-xs text-slate-300 mb-5 leading-relaxed">
+              Your Bishop can transform into the captured <strong className="text-indigo-300 uppercase">{pendingBishopTransform.targetPiece.type}</strong>! The bishop will be replaced by the captured piece at the opponent's position. This ability can only be used once.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const move = { ...pendingBishopTransform.move, isBishopTransform: true };
+                  setPendingBishopTransform(null);
+                  executeFinalMove(move);
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-950/80 transition-all border border-indigo-400 cursor-pointer"
+              >
+                Transform into {pendingBishopTransform.targetPiece.type.toUpperCase()}
+              </button>
+              <button
+                onClick={() => {
+                  const move = { ...pendingBishopTransform.move, isBishopTransform: false };
+                  setPendingBishopTransform(null);
+                  executeFinalMove(move);
+                }}
+                className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
+              >
+                Normal Capture
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* AI Analysis Modal */}
