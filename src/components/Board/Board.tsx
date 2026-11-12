@@ -47,7 +47,7 @@ export const Board: React.FC<BoardProps> = ({
   const fileLabels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
   return (
-    <div className="relative flex flex-col items-center justify-center select-none w-full max-w-[min(calc(100vw-12px),calc(100vh-210px),620px)] mx-auto">
+    <div className="relative flex flex-col items-center justify-center select-none w-full max-w-[min(calc(100vw-16px),calc(100vh-140px),840px)] mx-auto">
       {/* Outer Stone Frame: Slim padding on mobile so board scales as large as possible */}
       <div className="relative w-full aspect-square p-1 sm:p-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-black border-2 border-slate-700/80 shadow-2xl shadow-black/90 flex items-center justify-center">
         {/* 8x8 Board Grid: Edge-to-edge square grid with embedded corner coordinates */}

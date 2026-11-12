@@ -447,10 +447,10 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Battlefield Workspace: Optimized for Maximum Mobile Board Scaling */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-1 sm:px-4 py-2 sm:py-4 md:py-6 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-3 sm:gap-6">
+      {/* Main Battlefield Workspace: Optimized for Full Screen Device Scaling */}
+      <main className="flex-1 w-full max-w-[1750px] mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-3 sm:gap-6 lg:gap-8">
         {/* Left Column: Board + Active Piece Mods Bar */}
-        <div className="w-full lg:w-[56%] xl:w-[58%] flex flex-col items-center justify-center min-w-0 space-y-2">
+        <div className="w-full lg:flex-1 flex flex-col items-center justify-center min-w-0 space-y-2">
           <Board
             gameState={gameState}
             selectedPiece={selectedPiece}
@@ -463,7 +463,7 @@ export const App: React.FC = () => {
           />
 
           {/* Piece Special Action & Mod Panel directly under the board for immediate mobile thumb reach */}
-          <div className="w-full max-w-[min(calc(100vw-12px),calc(100vh-210px),620px)]">
+          <div className="w-full max-w-[min(calc(100vw-16px),calc(100vh-140px),840px)]">
             <PieceActionPanel
               selectedPiece={selectedPiece}
               legalMoves={legalMovesForSelected}
@@ -474,7 +474,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Right Column: Command Status, Controls, History & AI Telemetry */}
-        <div className="w-full lg:w-[44%] xl:w-[42%] flex flex-col space-y-3 sm:space-y-4 min-w-0 max-w-[620px] lg:max-w-none">
+        <div className="w-full lg:w-[380px] xl:w-[420px] 2xl:w-[450px] flex-shrink-0 flex flex-col space-y-3 sm:space-y-4 min-w-0">
           {/* 1. Turn & Kingdom Status Card */}
           <div className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
