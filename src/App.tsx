@@ -37,6 +37,8 @@ import {
   Award,
   ChevronLeft,
   GraduationCap,
+  Menu,
+  X,
 } from 'lucide-react';
 
 export type GameMode = 'human_vs_human' | 'human_vs_ai' | 'ai_vs_ai';
@@ -64,6 +66,7 @@ export const App: React.FC = () => {
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [showRules, setShowRules] = useState<boolean>(false);
   const [showResultModal, setShowResultModal] = useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   // AI Spectator Mode & Execution States
   const [isAiThinking, setIsAiThinking] = useState<boolean>(false);
@@ -317,6 +320,7 @@ export const App: React.FC = () => {
     setIsSpectatorPlaying(false);
     setIsAiThinking(false);
     setSelectedPiece(null);
+    setMobileMenuOpen(false);
   };
 
   // Graveyard / Captured pieces count
@@ -416,33 +420,69 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Global Action Buttons */}
+        {/* Right Section: Desktop Action Buttons + Mobile Controls & Hamburger */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Mobile Turn Badge */}
+          <div className="lg:hidden flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-semibold text-slate-300">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isWhite(gameState.activePlayer) ? 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]' : 'bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]'
+              }`}
+            />
+            <span>{isWhite(gameState.activePlayer) ? 'White' : 'Blue'}</span>
+            {attackMap.regentThreatened[gameState.activePlayer] && (
+              <span className="text-[9px] text-red-400 font-bold tracking-wider animate-pulse">CHECK!</span>
+            )}
+          </div>
+
+          {/* Mobile Quick Undo Button */}
           <button
-            onClick={() => setShowTutorial(true)}
-            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-200 border border-slate-700 transition-colors"
-            title="Interactive Academy"
+            disabled={gameState.history.length === 0 || isAiThinking}
+            onClick={handleUndo}
+            className="lg:hidden flex items-center justify-center p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 border border-slate-700 transition-colors"
+            title="Undo move"
           >
-            <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-kingdom-gold" />
-            <span className="hidden sm:inline">Academy</span>
+            <RotateCcw className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={() => setShowRules(true)}
-            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors"
-            title="Rules & Movements Codex"
-          >
-            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Codex</span>
-          </button>
+          {/* Desktop Global Action Buttons (Hidden on mobile) */}
+          <div className="hidden lg:flex items-center gap-2">
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-200 border border-slate-700 transition-colors"
+              title="Interactive Academy"
+            >
+              <GraduationCap className="w-4 h-4 text-kingdom-gold" />
+              <span>Academy</span>
+            </button>
 
+            <button
+              onClick={() => setShowRules(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition-colors"
+              title="Rules & Movements Codex"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Codex</span>
+            </button>
+
+            <button
+              onClick={() => setShowAIAnalysis(true)}
+              className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 text-xs font-bold text-purple-200 border border-purple-500/50 shadow-md transition-all"
+              title="AI Decision Analysis"
+            >
+              <Brain className="w-4 h-4 text-purple-300 animate-pulse" />
+              <span>AI Analysis</span>
+            </button>
+          </div>
+
+          {/* Mobile Hamburger Menu Button */}
           <button
-            onClick={() => setShowAIAnalysis(true)}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 text-xs font-bold text-purple-200 border border-purple-500/50 shadow-md transition-all"
-            title="AI Decision Analysis"
+            onClick={() => setMobileMenuOpen(true)}
+            className="lg:hidden flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-md transition-all active:scale-95"
+            title="Open Controls & Game Menu"
+            aria-label="Open menu"
           >
-            <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-300 animate-pulse" />
-            <span className="hidden sm:inline">AI Analysis</span>
+            <Menu className="w-5 h-5" />
           </button>
         </div>
       </header>
@@ -473,8 +513,8 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Command Status, Controls, History & AI Telemetry */}
-        <div className="w-full lg:w-[380px] xl:w-[420px] 2xl:w-[450px] flex-shrink-0 flex flex-col space-y-3 sm:space-y-4 min-w-0">
+        {/* Right Column: Command Status, Controls, History & AI Telemetry (Desktop only) */}
+        <div className="hidden lg:flex w-full lg:w-[380px] xl:w-[420px] 2xl:w-[450px] flex-shrink-0 flex-col space-y-3 sm:space-y-4 min-w-0">
           {/* 1. Turn & Kingdom Status Card */}
           <div className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
@@ -720,6 +760,213 @@ export const App: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Mobile Slide-Over Drawer (Accessible via Hamburger Icon) */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Body */}
+          <div className="relative w-[90%] max-w-[420px] h-full bg-slate-950 border-l border-slate-800 p-4 sm:p-5 shadow-2xl flex flex-col space-y-4 overflow-y-auto z-10">
+            {/* Top Bar with Close Button */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-kingdom-gold via-amber-600 to-amber-800 flex items-center justify-center border border-amber-300 overflow-hidden shrink-0">
+                  <img src="/pieces/regent.png" alt="Crown" className="w-full h-full object-cover object-top" />
+                </div>
+                <div>
+                  <h3 className="font-fantasy font-black text-amber-200 text-sm">BATTLE COMMAND</h3>
+                  <p className="text-[10px] text-slate-400 font-mono">Controls & Tactics</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
+                title="Close Menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Navigation Cards */}
+            <div className="grid grid-cols-3 gap-2 shrink-0">
+              <button
+                onClick={() => { setMobileMenuOpen(false); setShowTutorial(true); }}
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-semibold text-amber-200 transition-all"
+              >
+                <GraduationCap className="w-4 h-4 text-kingdom-gold mb-1" />
+                Academy
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); setShowRules(true); }}
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-semibold text-slate-300 transition-all"
+              >
+                <BookOpen className="w-4 h-4 mb-1" />
+                Codex
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); setShowAIAnalysis(true); }}
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-gradient-to-br from-purple-950 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 border border-purple-500/40 text-[11px] font-semibold text-purple-300 transition-all"
+              >
+                <Brain className="w-4 h-4 text-purple-300 mb-1 animate-pulse" />
+                Analysis
+              </button>
+            </div>
+
+            {/* Command Controls in Mobile Drawer */}
+            <div className="flex flex-col space-y-3 pb-6">
+              {/* 1. Turn & Kingdom Status Card */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                    Turn {gameState.turnNumber}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {attackMap.regentThreatened[gameState.activePlayer] && (
+                      <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black tracking-widest border border-red-400 animate-pulse flex items-center gap-1 shadow-lg shadow-red-900/50">
+                        <ShieldAlert className="w-3 h-3" />
+                        CHECK!
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 shadow-lg ${
+                        isWhite(gameState.activePlayer)
+                          ? 'bg-slate-900 border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.4)]'
+                          : 'bg-blue-950/80 border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
+                      }`}
+                    >
+                      <PieceIcon type="regent" owner={gameState.activePlayer} size={36} />
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-400 font-medium">Active Command</div>
+                      <div className="text-base font-fantasy font-bold text-white capitalize">
+                        {isWhite(gameState.activePlayer) ? 'White Side' : 'Blue Side'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <div className="px-2.5 py-1 rounded-lg bg-slate-900 border border-white/30 text-right">
+                      <div className="text-[9px] uppercase font-bold text-slate-200">White</div>
+                      <div className="text-xs font-mono font-bold text-slate-200">{whitePiecesRemaining.length} / 16</div>
+                    </div>
+                    <div className="px-2.5 py-1 rounded-lg bg-slate-900 border border-sky-500/30 text-right">
+                      <div className="text-[9px] uppercase font-bold text-sky-400">Blue</div>
+                      <div className="text-xs font-mono font-bold text-slate-200">{bluePiecesRemaining.length} / 16</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Tactical Overlay & Quick Actions */}
+              <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <ShieldAlert className="w-4 h-4 text-kingdom-gold" />
+                    Attack-Map Overlay
+                  </span>
+                  <button
+                    onClick={() => setShowTacticalOverlay(!showTacticalOverlay)}
+                    className={`px-3 py-0.5 rounded-full text-xs font-bold transition-all ${
+                      showTacticalOverlay ? 'bg-kingdom-gold text-black' : 'bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    {showTacticalOverlay ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                  <button
+                    disabled={gameState.history.length === 0 || isAiThinking}
+                    onClick={() => { setMobileMenuOpen(false); handleUndo(); }}
+                    className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs font-semibold text-slate-300"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Undo Move
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); handleRestart(); }}
+                    className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-red-400" />
+                    Restart
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Game Mode & AI Difficulty */}
+              <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+                <div className="text-xs uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+                  <Settings className="w-3.5 h-3.5 text-kingdom-gold" />
+                  Game Modes
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <button
+                    onClick={() => { setGameMode('human_vs_human'); handleRestart(); }}
+                    className={`py-1.5 rounded-lg text-xs font-semibold transition-all flex flex-col items-center gap-1 ${
+                      gameMode === 'human_vs_human' ? 'bg-amber-500 text-black font-bold' : 'text-slate-400'
+                    }`}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    2-Player
+                  </button>
+                  <button
+                    onClick={() => { setGameMode('human_vs_ai'); handleRestart(); }}
+                    className={`py-1.5 rounded-lg text-xs font-semibold transition-all flex flex-col items-center gap-1 ${
+                      gameMode === 'human_vs_ai' ? 'bg-amber-500 text-black font-bold' : 'text-slate-400'
+                    }`}
+                  >
+                    <Bot className="w-3.5 h-3.5" />
+                    Vs AI
+                  </button>
+                  <button
+                    onClick={() => { setGameMode('ai_vs_ai'); handleRestart(); }}
+                    className={`py-1.5 rounded-lg text-xs font-semibold transition-all flex flex-col items-center gap-1 ${
+                      gameMode === 'ai_vs_ai' ? 'bg-amber-500 text-black font-bold' : 'text-slate-400'
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    AI vs AI
+                  </button>
+                </div>
+
+                {gameMode !== 'human_vs_human' && (
+                  <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
+                      <span>AI Skill Level:</span>
+                      <span className="text-amber-300 font-bold capitalize">{aiDifficulty}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {(['beginner', 'intermediate', 'expert'] as AIDifficulty[]).map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => setAiDifficulty(d)}
+                          className={`py-1 px-2 rounded-lg text-xs font-semibold capitalize transition-all ${
+                            aiDifficulty === d ? 'bg-kingdom-gold text-black font-bold' : 'bg-slate-900 text-slate-400'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Move History in Mobile Drawer */}
+              <MoveHistory history={gameState.history} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Interactive Dialogs */}
       {pendingPromotion && (
