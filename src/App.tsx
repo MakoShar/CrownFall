@@ -49,7 +49,7 @@ export const App: React.FC = () => {
   // Game Configuration State
   const [gameMode, setGameMode] = useState<GameMode>('human_vs_ai');
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('intermediate');
-  const [humanPlayerColor, setHumanPlayerColor] = useState<PlayerColor>('gold');
+  const [humanPlayerColor, setHumanPlayerColor] = useState<PlayerColor>('white');
   const [pendingMode, setPendingMode] = useState<GameMode>('human_vs_ai');
 
   // Game Engine State
@@ -148,6 +148,7 @@ export const App: React.FC = () => {
     const all = generateLegalMoves(gameState.pieces, gameState.activePlayer, {
       isMutualResponse: gameState.status === 'mutual_regent_response',
       config: gameState.config,
+      turnNumber: gameState.turnNumber,
     });
     return all.filter((m) => m.pieceId === selectedPiece.id);
   }, [selectedPiece, gameState]);
@@ -167,7 +168,7 @@ export const App: React.FC = () => {
     if (isGameOver) return;
 
     const isAiTurn =
-      (gameMode === 'human_vs_ai' && gameState.activePlayer !== humanPlayerColor) ||
+      (gameMode === 'human_vs_ai' && isWhite(gameState.activePlayer) !== isWhite(humanPlayerColor)) ||
       (gameMode === 'ai_vs_ai' && isSpectatorPlaying);
 
     if (isAiTurn && !isAiThinking) {
@@ -192,11 +193,11 @@ export const App: React.FC = () => {
   const handlePieceClick = (piece: Piece) => {
     const isHumanTurn =
       gameMode === 'human_vs_human' ||
-      (gameMode === 'human_vs_ai' && gameState.activePlayer === humanPlayerColor);
+      (gameMode === 'human_vs_ai' && isWhite(gameState.activePlayer) === isWhite(humanPlayerColor));
 
     if (!isHumanTurn || isAiThinking) return;
 
-    if (piece.owner === gameState.activePlayer) {
+    if (isWhite(piece.owner) === isWhite(gameState.activePlayer)) {
       setSelectedPiece(piece);
     } else if (selectedPiece) {
       // Attempt capture
@@ -211,7 +212,7 @@ export const App: React.FC = () => {
   const handleSquareClick = (pos: Position) => {
     const isHumanTurn =
       gameMode === 'human_vs_human' ||
-      (gameMode === 'human_vs_ai' && gameState.activePlayer === humanPlayerColor);
+      (gameMode === 'human_vs_ai' && isWhite(gameState.activePlayer) === isWhite(humanPlayerColor));
 
     if (!isHumanTurn || isAiThinking || !selectedPiece) return;
 
@@ -289,7 +290,7 @@ export const App: React.FC = () => {
       targetState.winner = null;
       targetState.statusReason = undefined;
       targetState.rng.setState(lastEntry.rngState);
-      if (targetState.activePlayer === 'gold' && targetState.turnNumber > 1) {
+      if (isWhite(targetState.activePlayer) && targetState.turnNumber > 1) {
         targetState.turnNumber -= 1;
       }
     }
